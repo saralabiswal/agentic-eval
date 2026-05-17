@@ -16,14 +16,15 @@ Ollama or cloud-backed model evaluation when a team is ready.
 
 Author: Sarala Biswal
 
-## Naming
+## Framework Scope
 
-Keeping the name `agentic-eval` is the right choice. This repository is the
-evaluation framework: it measures whether any agentic system is faithful,
-relevant, stable, and efficient. The `banking-agentic-ai-platform` project is a
-real system under test that this framework can connect to for multi-layer
-pipeline evaluation. That keeps the product name reusable while still making
-the banking integration first-class.
+`agentic-eval` is the evaluation framework for governed agentic systems. It
+validates whether system outputs are faithful to retrieved context, relevant to
+the business scenario, consistent across repeated runs, and practical within
+latency expectations.
+
+The `banking-agentic-ai-platform` integration is a supported system-under-test
+adapter for real multi-layer banking pipeline evaluation.
 
 ## Business Problem
 
