@@ -16,6 +16,46 @@ Ollama or cloud-backed model evaluation when a team is ready.
 
 Author: Sarala Biswal
 
+## Business Problem
+
+Enterprises are adopting LLM agents for workflows such as payment risk
+intervention, billing dispute resolution, churn prevention, customer servicing,
+and policy-guided decision support. These systems can produce well-structured
+answers while still being wrong in ways that matter:
+
+- The answer may not be grounded in the retrieved policy or customer context.
+- The model may invent facts that are not present in source systems.
+- The response may be relevant in tone but miss the actual business decision.
+- Retrieval may pass noisy documents that confuse the agent or waste tokens.
+- The same input may produce inconsistent decisions across repeated runs.
+- A model may look accurate but violate latency expectations for production use.
+
+Traditional schema validation only proves that the response shape is correct.
+It does not prove that the reasoning is faithful, stable, relevant, or efficient
+enough for a governed enterprise workflow.
+
+## How This App Solves It
+
+`agentic-eval` turns governed business scenarios into repeatable benchmark
+cases. Each case defines the customer context, retrieved policy evidence,
+expected decision signals, hallucination guards, and score thresholds. The app
+then runs the system under test and evaluates the output across five dimensions:
+faithfulness, answer relevance, context precision, consistency, and
+latency/quality tradeoff.
+
+The result is an evidence-backed benchmark report that helps teams answer:
+
+- Can this agent explain its decision from approved context?
+- Did the response address the business scenario that was asked?
+- Which policy documents were actually useful?
+- Does the same case produce the same decision over repeated runs?
+- Which model/backend gives the best quality within the latency budget?
+- Are there unsupported claims that should block release?
+
+In practice, this gives product, engineering, risk, and governance teams a
+shared release gate for agentic systems instead of relying on manual review or
+one-off prompt testing.
+
 ## What It Evaluates
 
 | Dimension | Purpose | Enterprise risk addressed |
