@@ -7,6 +7,7 @@ import { getCases, getResult, getResults } from "../api/client";
 import type { BenchmarkReport, EvalResult, TestCase } from "../api/types";
 import { ConsistencyView } from "../components/ConsistencyView";
 import { DimensionBadge } from "../components/DimensionBadge";
+import { backendDisplayName } from "../utils/modelLabels";
 
 function scoreClass(value: number): string {
   if (value >= 0.9) {
@@ -76,7 +77,7 @@ export function ResultDetail(): JSX.Element {
         <div>
           <h1 className="page-title">Benchmark Results</h1>
           <div className="page-subtitle">
-            {report.run_id} · {report.model_backend} LLM · {report.total_cases} cases
+            {report.run_id} · {backendDisplayName(report.model_backend)} backend · {report.total_cases} cases
           </div>
         </div>
         <div style={{ display: "flex", gap: 7 }}>
@@ -94,8 +95,8 @@ export function ResultDetail(): JSX.Element {
       <div className="grid-5" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))", marginBottom: 14 }}>
         {[
           ["Pass Rate", `${(report.summary.pass_rate * 100).toFixed(1)}%`, "var(--con)"],
-          ["Avg Overall", avgOverall(report.results).toFixed(2), "var(--blue)"],
-          ["Avg Faithfulness", report.summary.avg_faithfulness.toFixed(2), "var(--faith)"],
+          ["Average Overall", avgOverall(report.results).toFixed(2), "var(--blue)"],
+          ["Average Faithfulness", report.summary.avg_faithfulness.toFixed(2), "var(--faith)"],
           ["Hallucinations", String(report.summary.hallucination_count), "var(--faith)"]
         ].map(([label, value, color]) => (
           <div className="kpi" key={label} style={{ "--accent": color } as CSSProperties}>
@@ -132,10 +133,10 @@ export function ResultDetail(): JSX.Element {
                 </td>
                 <td>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                    <DimensionBadge label="Faith" passed={result.faithfulness.passed} score={result.faithfulness.score} />
-                    <DimensionBadge label="Rel" passed={result.answer_relevance.passed} score={result.answer_relevance.score} />
-                    <DimensionBadge label="Prec" passed={result.context_precision.passed} score={result.context_precision.score} />
-                    <DimensionBadge label="Con" passed={result.consistency.passed} score={result.consistency.score} />
+                    <DimensionBadge label="Faithfulness" passed={result.faithfulness.passed} score={result.faithfulness.score} />
+                    <DimensionBadge label="Relevance" passed={result.answer_relevance.passed} score={result.answer_relevance.score} />
+                    <DimensionBadge label="Context" passed={result.context_precision.passed} score={result.context_precision.score} />
+                    <DimensionBadge label="Consistency" passed={result.consistency.passed} score={result.consistency.score} />
                   </div>
                 </td>
                 <td className="mono muted" style={{ fontSize: 12 }}>
@@ -180,7 +181,7 @@ function SelectedResult({
             {result.case_id}
           </div>
           <div style={{ color: "var(--bright)", fontSize: 16, fontWeight: 750 }}>
-            Per-case drilldown
+            Per-case Drilldown
           </div>
         </div>
         <span className={`score ${scoreClass(result.overall_score)}`}>

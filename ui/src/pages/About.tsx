@@ -53,12 +53,12 @@ const dimensions: Dimension[] = [
     icon: Clock3,
     color: "var(--lat)",
     label: "Latency / Quality",
-    text: "Compares score and response time so teams can choose a backend within their SLO budget."
+    text: "Compares score and response time so teams can choose a backend within their service-level budget."
   }
 ];
 
 const workflow = [
-  "Define governed scenarios as YAML test cases with expected signals and thresholds.",
+  "Define governed scenarios as case files with expected signals and thresholds.",
   "Run the same cases against a mock, Ollama, API, or platform-backed system under test.",
   "Score each response with deterministic checks, embeddings, and a separate judge model.",
   "Review pass rates, hallucinations, consistency variance, latency, and per-case evidence."
@@ -75,7 +75,7 @@ const developerPath = [
   {
     label: "Choose the local preset",
     code: "BenchmarkRunner.tsx -> POST /api/config/runtime",
-    text: "The Benchmark page saves the Local Ollama preset before the run starts: judge backend ollama, judge model qwen2.5:7b, SUT backend ollama, SUT model llama3.2."
+    text: "The Benchmark page saves the Local Ollama preset before the run starts: judge backend ollama, judge model qwen2.5:7b, system backend ollama, system model llama3.2."
   },
   {
     label: "Start the benchmark",
@@ -95,7 +95,7 @@ const developerPath = [
   {
     label: "Call the system under test",
     code: "OllamaRunner.run() -> /api/generate",
-    text: "For the SUT pass, llama3.2 receives the customer profile, policy context, and task prompt. Its answer becomes the agent output for scoring."
+    text: "For the system pass, llama3.2 receives the customer profile, policy context, and task prompt. Its answer becomes the agent output for scoring."
   },
   {
     label: "Evaluate with a separate judge",
@@ -110,7 +110,7 @@ const developerPath = [
   {
     label: "Write the evidence trail",
     code: "JsonReporter + HtmlReporter + SSE events",
-    text: "The result stores scores, evidence, raw Ollama response metadata, run outputs, and report files. The live log receives case started, SUT completed, evaluation started, and done events."
+    text: "The result stores scores, evidence, raw Ollama response metadata, run outputs, and report files. The live log receives case started, system completed, evaluation started, and done events."
   }
 ];
 
@@ -121,7 +121,7 @@ export function About(): JSX.Element {
         <div>
           <h1 className="page-title">About agentic-eval</h1>
           <div className="page-subtitle">
-            Evaluation coverage for governed LLM agent workflows
+            Evaluation coverage for governed AI agent workflows
           </div>
         </div>
       </div>
@@ -131,7 +131,7 @@ export function About(): JSX.Element {
           <div className="label">What This App Is</div>
           <h2>Know whether an agent is grounded, stable, and worth its latency.</h2>
           <p>
-            agentic-eval benchmarks LLM-powered pipelines that retrieve context, reason over it,
+            agentic-eval benchmarks AI pipelines that retrieve context, reason over it,
             and propose typed actions. It turns governed scenarios into repeatable tests with
             scores, evidence, hallucination tracking, and backend comparisons.
           </p>
@@ -246,7 +246,7 @@ export function About(): JSX.Element {
           </div>
           <p className="about-text">
             The default scenarios are banking-flavored, but the pattern is broader: any agentic
-            pipeline that retrieves context, reasons with an LLM, and proposes an action can be
+            pipeline that retrieves context, reasons with a model, and proposes an action can be
             evaluated with the same structure. The key promise is repeatability: every benchmark
             produces comparable scores, evidence, and a machine-readable report.
           </p>
@@ -267,12 +267,12 @@ export function About(): JSX.Element {
           </div>
           <div className="developer-runtime">
             <div>
-              <span>Judge LLM</span>
+              <span>Judge Model</span>
               <strong>Qwen 2.5 7B</strong>
               <code>ollama / qwen2.5:7b</code>
             </div>
             <div>
-              <span>SUT</span>
+              <span>System Under Test</span>
               <strong>Llama 3.2</strong>
               <code>ollama / llama3.2</code>
             </div>

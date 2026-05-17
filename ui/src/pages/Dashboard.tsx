@@ -13,6 +13,7 @@ import {
 import { getResults } from "../api/client";
 import type { BenchmarkRunSummary } from "../api/types";
 import { ScoreGauge } from "../components/ScoreGauge";
+import { backendDisplayName } from "../utils/modelLabels";
 
 const demoRuns: BenchmarkRunSummary[] = [
   {
@@ -107,18 +108,18 @@ export function Dashboard(): JSX.Element {
         <ScoreGauge
           color="var(--faith)"
           detail="claims grounded"
-          label="Avg Faithfulness"
+          label="Average Faithfulness"
           value={latest.avg_faithfulness}
         />
         <ScoreGauge
           color="var(--con)"
           detail="multi-run stability"
-          label="Avg Consistency"
+          label="Average Consistency"
           value={latest.avg_consistency}
         />
         <ScoreGauge color="var(--blue)" detail={`${latest.passed}/${latest.total_cases} last run`} label="Pass Rate" value={latest.pass_rate} />
         <ScoreGauge color="var(--faith)" detail="guardrail claims" label="Hallucinations" value={latest.hallucination_count} />
-        <ScoreGauge color="var(--rel)" detail={`${latest.model_backend} backend`} label="Avg Latency" value={latest.avg_latency_ms} />
+        <ScoreGauge color="var(--rel)" detail={`${backendDisplayName(latest.model_backend)} backend`} label="Average Latency" value={latest.avg_latency_ms} />
       </div>
 
       <div className="grid-2" style={{ marginBottom: 14 }}>
@@ -149,7 +150,7 @@ export function Dashboard(): JSX.Element {
           {[
             ["Faithfulness", "var(--faith)", latest.avg_faithfulness],
             ["Answer Relevance", "var(--rel)", latest.avg_answer_relevance],
-            ["Ctx Precision", "var(--prec)", latest.avg_context_precision],
+            ["Context Precision", "var(--prec)", latest.avg_context_precision],
             ["Consistency", "var(--con)", latest.avg_consistency]
           ].map(([label, color, value]) => (
             <div className="dim-row" key={String(label)}>
@@ -179,12 +180,12 @@ export function Dashboard(): JSX.Element {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Run ID</th>
+              <th>Run</th>
               <th>Date</th>
-              <th>Backend</th>
+              <th>Backend Type</th>
               <th>Cases</th>
               <th>Passed</th>
-              <th>Avg Score</th>
+              <th>Average Score</th>
               <th />
             </tr>
           </thead>
@@ -198,7 +199,7 @@ export function Dashboard(): JSX.Element {
                   {run.run_timestamp}
                 </td>
                 <td>
-                  <span className="pill">{run.model_backend}</span>
+                  <span className="pill">{backendDisplayName(run.model_backend)}</span>
                 </td>
                 <td className="mono">{run.total_cases}</td>
                 <td className="mono">

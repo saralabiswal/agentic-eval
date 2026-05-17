@@ -13,6 +13,29 @@ export function modelDisplayName(model: string | null | undefined): string {
   if (normalized.startsWith("mistral")) return "Mistral";
   if (normalized.startsWith("phi3.5")) return "Phi 3.5";
   if (normalized === "mock-judge") return "Mock Judge";
-  if (normalized === "mock-sut") return "Mock SUT";
+  if (normalized === "mock-sut") return "Mock System";
   return value || "Not set";
+}
+
+/**
+ * Converts backend identifiers into labels for dashboards and tables.
+ */
+export function backendDisplayName(backend: string | null | undefined): string {
+  if (backend === "mock") return "Mock";
+  if (backend === "ollama") return "Ollama";
+  if (backend === "api") return "API";
+  return backend || "Not set";
+}
+
+/**
+ * Converts API/data identifiers into readable labels without changing the data.
+ */
+export function readableLabel(value: string | null | undefined): string {
+  if (!value) {
+    return "Not set";
+  }
+  return value
+    .replace(/[_-]+/g, " ")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }

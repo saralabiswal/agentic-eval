@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { getCases, startBenchmark } from "../api/client";
 import type { TestCase } from "../api/types";
+import { readableLabel } from "../utils/modelLabels";
 
 function dimensionSeed(caseId: string): { faith: number; relevance: number; precision: number; consistency: number } {
   const code = caseId.charCodeAt(caseId.length - 1);
@@ -54,7 +55,7 @@ export function TestCases(): JSX.Element {
       <div className="page-head">
         <div>
           <h1 className="page-title">Test Cases</h1>
-          <div className="page-subtitle">11 YAML-defined cases · 3 scenarios · 3 customers</div>
+          <div className="page-subtitle">11 case definitions · 3 scenarios · 3 customers</div>
         </div>
       </div>
 
@@ -91,7 +92,7 @@ export function TestCases(): JSX.Element {
           <table className="data-table">
             <thead>
               <tr>
-                <th>ID</th>
+                <th>Case</th>
                 <th>Scenario</th>
                 <th>Customer</th>
                 <th style={{ color: "var(--faith)" }}>F</th>
@@ -115,7 +116,7 @@ export function TestCases(): JSX.Element {
                     <td className="mono" style={{ color: "var(--faith)", fontSize: 12 }}>
                       {testCase.case_id}
                     </td>
-                    <td>{testCase.scenario.split("_").join(" ")}</td>
+                    <td>{readableLabel(testCase.scenario)}</td>
                     <td className="mono muted" style={{ fontSize: 12 }}>
                       {testCase.customer_id}
                     </td>
@@ -164,9 +165,9 @@ function CaseDetail({
         {testCase.description}
       </div>
       {[
-        ["Scenario", testCase.scenario],
-        ["Customer", `${testCase.customer_id} · risk: ${String(testCase.expected.risk_level ?? "N/A")}`],
-        ["CRM", String(testCase.input.customer_profile.crm_available ?? "n/a")],
+        ["Scenario", readableLabel(testCase.scenario)],
+        ["Customer", `${testCase.customer_id} · risk: ${readableLabel(testCase.expected.risk_level ?? "not set")}`],
+        ["Customer Records", readableLabel(String(testCase.input.customer_profile.crm_available ?? "not available"))],
         ["Policy", chunks.map((chunk) => String(chunk.document_id)).join(" · ")]
       ].map(([label, value]) => (
         <div
@@ -191,18 +192,38 @@ function CaseDetail({
       <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
         {testCase.expected.should_not_claim.map((guard) => (
           <span className="score fail" key={guard}>
-            {guard}
+            {readableLabel(guard)}
           </span>
         ))}
       </div>
       <div className="field-label" style={{ marginTop: 14 }}>
         Customer Profile
       </div>
-      <pre className="pre">{JSON.stringify(testCase.input.customer_profile, null, 2)}</pre>
+      <div className="profile-grid">
+        {Object.entries(testCase.input.customer_profile).map(([key, value]) => (
+          <div className="profile-row" key={key}>
+            <span>{readableLabel(key)}</span>
+            <strong>{readableValue(value)}</strong>
+          </div>
+        ))}
+      </div>
       <button className="button primary small" onClick={onRun} style={{ marginTop: 12 }} type="button">
         <Play size={13} />
         Run This Case
       </button>
     </div>
   );
+}
+
+function readableValue(value: unknown): string {
+  if (typeof value === "boolean") {
+    return value ? "Yes" : "No";
+  }
+  if (typeof value === "string") {
+    return readableLabel(value);
+  }
+  if (value === null || value === undefined) {
+    return "Not set";
+  }
+  return String(value);
 }

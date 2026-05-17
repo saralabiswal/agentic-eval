@@ -85,7 +85,7 @@ function parseLogEvent(event: string): ParsedLogEvent {
   if (name === "sut_started") {
     return {
       name,
-      text: `Calling ${String(data.backend ?? "SUT")} model ${String(data.model ?? "")} for ${String(data.case_id ?? "")}.`,
+      text: `Calling ${String(data.backend ?? "system")} model ${String(data.model ?? "")} for ${String(data.case_id ?? "")}.`,
       time: timeLabel(timestamp),
       tone: "running"
     };
@@ -93,7 +93,7 @@ function parseLogEvent(event: string): ParsedLogEvent {
   if (name === "sut_completed") {
     return {
       name,
-      text: `SUT response received for ${String(data.case_id ?? "")} in ${String(data.latency_ms ?? "?")} ms.`,
+      text: `System response received for ${String(data.case_id ?? "")} in ${String(data.latency_ms ?? "?")} ms.`,
       time: timeLabel(timestamp),
       tone: "success"
     };
@@ -161,7 +161,7 @@ function labelFor(name: string): string {
   if (name === "benchmark_done") return "DONE";
   if (name === "benchmark_failed" || name === "stream_error") return "FAIL";
   if (name === "benchmark_progress") return "RUN";
-  if (name === "sut_started" || name === "sut_completed") return "SUT";
+  if (name === "sut_started" || name === "sut_completed") return "SYSTEM";
   if (name === "evaluation_started") return "JUDGE";
   if (name === "case_completed") return "CASE";
   return "RUN";

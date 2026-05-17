@@ -76,8 +76,8 @@ export function SettingsPage(): JSX.Element {
             testMessage={testMutation.data?.target === "judge" ? testMutation.data.message : undefined}
           />
         }
-        subtitle="Evaluates agent outputs. Should differ from SUT to avoid self-evaluation bias."
-        title="Judge LLM"
+        subtitle="Evaluates agent outputs. Should differ from the system under test to avoid self-evaluation bias."
+        title="Judge Model"
       />
       <SettingsSection
         body={
@@ -108,7 +108,7 @@ export function SettingsPage(): JSX.Element {
             testMessage={testMutation.data?.target === "sut" ? testMutation.data.message : undefined}
           />
         }
-        subtitle="The LLM being evaluated. Can differ from the judge."
+        subtitle="The model being evaluated. It should differ from the judge."
         title="System Under Test"
       />
       {localPairStatus ? <StatusBox tone={localPairStatus.tone} text={localPairStatus.text} /> : null}
@@ -141,7 +141,7 @@ export function SettingsPage(): JSX.Element {
             <div className="kpi-detail" style={{ marginTop: 8 }}>
               {testMutation.data?.target === "platform"
                 ? testMutation.data.message
-                : "Disabled by default — DirectRunner active when platform is unavailable."}
+                : "Disabled by default - direct runner active when platform is unavailable."}
             </div>
           </div>
         }
@@ -207,7 +207,7 @@ function BackendSelector({
 
   return (
     <>
-      <div className="field-label">Effective Backend</div>
+      <div className="field-label">Backend Type</div>
       <div className="segmented" style={{ marginBottom: 10 }}>
         {backendOptions.map((option) => (
           <button
@@ -279,7 +279,7 @@ function BackendSelector({
           Test {backend}
         </button>
         <button className="segment active" onClick={onSave} type="button">
-          Save {role === "judge" ? "Judge" : "SUT"}
+          Save {role === "judge" ? "Judge" : "System"}
         </button>
       </div>
       <StatusBox
@@ -294,7 +294,7 @@ function Thresholds({ thresholds }: { thresholds: Record<string, number> }): JSX
   const rows = [
     ["Faithfulness", "var(--faith)", thresholds.faithfulness ?? 0.85],
     ["Answer Relevance", "var(--rel)", thresholds.answer_relevance ?? 0.8],
-    ["Ctx Precision", "var(--prec)", thresholds.context_precision ?? 0.7],
+    ["Context Precision", "var(--prec)", thresholds.context_precision ?? 0.7],
     ["Consistency", "var(--con)", thresholds.consistency ?? 0.9]
   ];
   return (
@@ -375,15 +375,15 @@ function setDraftBackend(
 function localPairMessage(
   judgeBackend: ModelBackend,
   judgeModel: string,
-  sutBackend: ModelBackend,
-  sutModel: string
+  systemBackend: ModelBackend,
+  systemModel: string
 ): { text: string; tone: "neutral" | "success" | "warn" } | null {
-  if (judgeBackend !== "ollama" || sutBackend !== "ollama") {
+  if (judgeBackend !== "ollama" || systemBackend !== "ollama") {
     return null;
   }
-  if (judgeModel === sutModel) {
+  if (judgeModel === systemModel) {
     return {
-      text: "Judge and SUT use the same Ollama model. Good for experiments, but not recommended for serious evaluation.",
+      text: "Judge and system use the same Ollama model. Choose different models for serious evaluation.",
       tone: "warn"
     };
   }

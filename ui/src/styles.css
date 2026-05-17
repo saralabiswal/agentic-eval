@@ -172,7 +172,7 @@ a {
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding: 0 22px;
 }
 
@@ -504,6 +504,39 @@ a {
   color: var(--mid);
   font-size: 12px;
   line-height: 1.45;
+}
+
+.profile-grid {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.profile-row {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(120px, 0.55fr) minmax(0, 1fr);
+  padding: 8px 10px;
+}
+
+.profile-row:last-child {
+  border-bottom: 0;
+}
+
+.profile-row span {
+  color: var(--mid);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.profile-row strong {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
 }
 
 .dim-row {

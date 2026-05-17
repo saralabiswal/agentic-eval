@@ -64,12 +64,12 @@ one-off prompt testing.
 | Answer relevance | Confirms the response addresses the scenario | Plausible but off-task answers |
 | Context precision | Measures whether retrieved chunks were useful | Noisy retrieval and wasted tokens |
 | Consistency | Re-runs the same case and compares outputs | Unstable decisions for identical inputs |
-| Latency / quality | Compares quality against response time | Model choices that miss SLO expectations |
+| Latency / quality | Compares quality against response time | Model choices that miss service-level expectations |
 
 ## Core Capabilities
 
-- YAML-backed benchmark cases for repeatable governed scenarios.
-- Separate Judge LLM and System Under Test (SUT) configuration.
+- Case-file-backed benchmark scenarios for repeatable governed evaluation.
+- Separate judge model and system-under-test model configuration.
 - Mock, Ollama, and API execution modes.
 - FastAPI service for benchmark execution, runtime settings, results, test cases,
   and server-sent live progress events.
@@ -81,36 +81,19 @@ one-off prompt testing.
 
 ## Run Modes
 
-| Mode | Judge | SUT | Best for |
+| Mode | Judge | System under test | Best for |
 | --- | --- | --- | --- |
-| Mock | Deterministic mock judge | Deterministic mock SUT | CI, UI checks, repeatable local development |
+| Mock | Deterministic mock judge | Deterministic mock system | CI, UI checks, repeatable local development |
 | Local Ollama | `qwen2.5:7b` | `llama3.2` | No-key local model evaluation |
 | API | OpenAI via LiteLLM | OpenAI via LiteLLM | Higher-quality final evaluation |
-| Hybrid | API judge | Ollama SUT | Strong external judge over local model outputs |
+| Hybrid | API judge | Ollama system | Strong external judge over local model outputs |
 
-The Judge and SUT should remain separate. Asking the same model to grade itself
-can hide quality issues and creates self-evaluation bias.
+The judge and system under test should remain separate. Asking the same model to
+grade itself can hide quality issues and creates self-evaluation bias.
 
 ## Architecture
 
-```text
-YAML test cases
-  -> BenchmarkEngine
-  -> Runner
-       - MockRunner
-       - OllamaRunner
-       - ApiRunner
-       - PlatformRunner
-  -> CompositeEvaluator
-       - FaithfulnessEvaluator
-       - AnswerRelevanceEvaluator
-       - ContextPrecisionEvaluator
-       - ConsistencyEvaluator
-  -> BenchmarkReport
-  -> JSON / HTML reports
-  -> FastAPI results API + SSE events
-  -> React dashboard
-```
+![agentic-eval logical architecture](docs/assets/logical-architecture.svg)
 
 ### Runtime Flow
 
@@ -118,12 +101,30 @@ YAML test cases
 2. The UI saves runtime model settings through `POST /config/runtime`.
 3. The UI starts a run through `POST /benchmark/run`.
 4. FastAPI creates a run id and background task.
-5. `BenchmarkEngine` loads matching YAML cases from `test_cases/`.
-6. The selected runner calls the SUT and captures raw response metadata.
+5. `BenchmarkEngine` loads matching case files from `test_cases/`.
+6. The selected runner calls the system under test and captures raw response metadata.
 7. `CompositeEvaluator` scores the output across all evaluation dimensions.
 8. Reporters persist JSON and HTML outputs under `reports/`.
 9. The UI streams progress from `/benchmark/events/{run_id}` and reads results
    from `/results`.
+
+## Code Walkthrough
+
+This is the end-to-end path for one benchmark case.
+
+| Step | Code path | What happens |
+| --- | --- | --- |
+| 1 | `ui/src/pages/BenchmarkRunner.tsx` | The user selects a preset and a case group, then clicks Run Benchmark. |
+| 2 | `ui/src/api/client.ts` | `updateRuntimeConfig()` saves the selected judge and system models; `startBenchmark()` posts the run request. |
+| 3 | `eval/api/routers/config.py` | `POST /config/runtime` validates the model/backend pairing and updates in-memory runtime settings. |
+| 4 | `eval/api/routers/benchmark.py` | `POST /benchmark/run` creates the run id, event queue, and background task. |
+| 5 | `eval/benchmark.py` | `BenchmarkEngine.run()` loads matching case files, chooses the runner, emits live events, and coordinates scoring. |
+| 6 | `eval/runners/ollama_runner.py`, `eval/runners/api_runner.py`, or `eval/runners/mock_runner.py` | The selected runner calls the system under test and returns agent output, latency, model name, and raw metadata. |
+| 7 | `eval/evaluators/composite.py` | `CompositeEvaluator` invokes each dimension evaluator and combines the scores. |
+| 8 | `eval/judge/client.py` and `eval/judge/prompts.py` | Faithfulness and context precision use the configured judge client and versioned prompts. |
+| 9 | `eval/evaluators/answer_relevance.py` and `eval/evaluators/consistency.py` | Embedding similarity checks relevance and repeated-run stability. |
+| 10 | `eval/reporters/json_reporter.py` and `eval/reporters/html_reporter.py` | Reports are written to disk for machine processing and human review. |
+| 11 | `eval/api/routers/results.py` and `ui/src/pages/ResultDetail.tsx` | The dashboard reads completed reports and shows scores, evidence, policy documents, and consistency outputs. |
 
 ## Quick Start
 
@@ -145,7 +146,7 @@ cp .env.example .env
 make demo
 ```
 
-Default behavior uses mock judge + mock SUT. It requires no API key and is
+Default behavior uses mock judge + mock system. It requires no API key and is
 designed for repeatable development and CI checks.
 
 ### Fully Local Ollama Run
@@ -166,7 +167,7 @@ SUT_BACKEND=ollama
 SUT_MODEL=llama3.2
 ```
 
-This keeps evaluation local and keyless while preserving Judge/SUT separation:
+This keeps evaluation local and keyless while preserving judge/system separation:
 Qwen judges Llama outputs.
 
 ### API-Backed Run
@@ -185,9 +186,9 @@ SUT_MODEL=gpt-4o-mini
 OPENAI_API_KEY=your-key
 ```
 
-Use a different Judge model and SUT model for evaluation. The Judge is assessing
-the SUT output, so the normal API setup should not point both roles at the same
-model.
+Use a different judge model and system model for evaluation. The judge is
+assessing the system output, so the normal API setup should not point both roles
+at the same model.
 
 Then run:
 
@@ -228,7 +229,7 @@ port `8000`.
 | `GET /benchmark/events/{run_id}` | Stream live benchmark events |
 | `GET /results` | List completed benchmark reports |
 | `GET /results/{run_id}` | Fetch a full report |
-| `GET /cases` | List YAML-backed test cases |
+| `GET /cases` | List case-file-backed test cases |
 | `GET /cases/{case_id}` | Fetch one test case |
 | `GET /config` | Return non-secret effective runtime config |
 | `POST /config/runtime` | Update non-secret runtime model selection |
@@ -245,7 +246,7 @@ eval/
   reporters/    JSON, HTML, and terminal report generation
   runners/      Mock, Ollama, API, platform, and direct runners
 
-test_cases/     YAML benchmark definitions
+test_cases/     Benchmark case definitions
 tests/          Unit and integration coverage
 ui/             React + Vite dashboard
 reports/        Generated reports; only .gitkeep is tracked
@@ -281,13 +282,13 @@ cd ui && corepack pnpm build
 - Mock mode keeps tests deterministic and avoids accidental cloud calls.
 - Ollama mode calls the configured local `OLLAMA_BASE_URL`.
 - API mode requires an explicit key and should be used deliberately.
-- Judge and SUT settings are independent to avoid self-evaluation by default.
+- Judge and system settings are independent to avoid self-evaluation by default.
 - Every benchmark result records evidence, hallucination flags, raw response
   metadata, latency, and pass/fail status.
 
 ## Adding Test Cases
 
-Add YAML files under `test_cases/<scenario>/`.
+Add case definition files under `test_cases/<scenario>/`.
 
 Each case should include:
 

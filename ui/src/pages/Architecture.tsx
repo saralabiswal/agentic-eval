@@ -38,36 +38,36 @@ const steps: ArchitectureStep[] = [
     num: "01",
     color: "#60a5fa",
     title: "Test Cases",
-    subtitle: "YAML scenarios and thresholds",
+    subtitle: "Scenario definitions and thresholds",
     description:
       "Each scenario is stored as data: customer profile, retrieved policy chunks, expected signals, and pass thresholds.",
     icon: FileCode2,
     inputs: ["Scenario definition", "Customer profile", "Policy chunks", "Evaluation thresholds"],
     work: [
-      "Load YAML files from test_cases/",
+      "Load case files from test_cases/",
       "Validate shape with Pydantic schemas",
       "Keep expected outcomes as scoring criteria, not runner hints"
     ],
-    outputs: ["Validated TestCase objects", "Case IDs grouped by scenario", "Thresholds for each dimension"],
-    safeguards: ["No logic in YAML", "Duplicate case IDs rejected", "Schema errors fail fast"]
+    outputs: ["Validated test cases", "Cases grouped by scenario", "Thresholds for each dimension"],
+    safeguards: ["No logic in case files", "Duplicate case identifiers rejected", "Schema errors fail fast"]
   },
   {
     id: "runner",
     num: "02",
     color: "#38bdf8",
-    title: "Runner / SUT",
+    title: "Runner and System",
     subtitle: "Mock, Ollama, API, or platform",
     description:
       "The runner executes the same test case against the chosen system under test and returns the agent response plus latency.",
     icon: GitBranch,
     inputs: ["Validated test case", "Selected backend", "Model settings", "Optional platform URL"],
     work: [
-      "Assemble the prompt/context for the SUT",
+      "Assemble the prompt/context for the system under test",
       "Call mock, local, API, or banking platform backend",
       "Record response text and elapsed time"
     ],
     outputs: ["Agent output", "Backend label", "Latency in milliseconds"],
-    safeguards: ["Judge is never the same component as SUT", "Mock output is deterministic", "Invalid backend returns a typed error"]
+    safeguards: ["Judge is never the same component as the system under test", "Mock output is deterministic", "Invalid backend returns a typed error"]
   },
   {
     id: "faithfulness",
@@ -84,7 +84,7 @@ const steps: ArchitectureStep[] = [
       "Match claims against exact context evidence",
       "Mark unsupported claims as hallucinations"
     ],
-    outputs: ["DimensionScore", "Evidence quotes", "Hallucination list"],
+    outputs: ["Dimension score", "Evidence quotes", "Hallucination list"],
     safeguards: ["No external knowledge", "Unsupported claims are preserved", "Default threshold is 0.85"]
   },
   {
@@ -148,7 +148,7 @@ const steps: ArchitectureStep[] = [
     title: "Latency / Quality",
     subtitle: "Quality per second",
     description:
-      "Latency and quality are compared together so teams can pick a backend that fits both scoring expectations and SLOs.",
+      "Latency and quality are compared together so teams can pick a backend that fits both scoring expectations and service-level goals.",
     icon: Gauge,
     inputs: ["Overall score", "Latency measurement", "Backend label"],
     work: [
@@ -157,13 +157,13 @@ const steps: ArchitectureStep[] = [
       "Compare model backends side by side"
     ],
     outputs: ["Latency metric", "Quality-per-second ratio", "Backend comparison data"],
-    safeguards: ["Not a pass/fail dimension", "Backend labels preserved", "SLO tradeoffs remain explicit"]
+    safeguards: ["Not a pass/fail dimension", "Backend labels preserved", "Service-level tradeoffs remain explicit"]
   },
   {
     id: "judge",
     num: "J",
     color: "#fb923c",
-    title: "Judge LLM",
+    title: "Judge Model",
     subtitle: "Separate evaluator model",
     description:
       "The judge scores the system output but is configured separately from the system under test to avoid self-evaluation bias.",
@@ -174,7 +174,7 @@ const steps: ArchitectureStep[] = [
       "Call mock, Ollama, or API judge",
       "Parse JSON-only scoring response"
     ],
-    outputs: ["JudgeResponse", "Dimension reasoning", "Evidence used for scoring"],
+    outputs: ["Judge response", "Dimension reasoning", "Evidence used for scoring"],
     safeguards: ["Prompt versions are retained", "Secrets never reach the UI", "Mock judge supports deterministic development"]
   },
   {
@@ -184,7 +184,7 @@ const steps: ArchitectureStep[] = [
     title: "Benchmark Engine",
     subtitle: "Aggregation, reports, and SSE",
     description:
-      "The engine orchestrates cases, evaluators, reports, and live events into one BenchmarkReport for the dashboard.",
+      "The engine orchestrates cases, evaluators, reports, and live events into one benchmark report for the dashboard.",
     icon: Activity,
     inputs: ["Validated cases", "Runner outputs", "Dimension scores", "Latency metrics"],
     work: [
@@ -192,7 +192,7 @@ const steps: ArchitectureStep[] = [
       "Compute weighted overall score",
       "Emit live SSE events and persist reports"
     ],
-    outputs: ["EvalResult per case", "BenchmarkReport", "HTML and JSON reports", "Dashboard API data"],
+    outputs: ["Evaluation result per case", "Benchmark report", "HTML and JSON reports", "Dashboard API data"],
     safeguards: ["Mock-first execution", "Structured result schemas", "Reports discoverable from disk"]
   }
 ];
@@ -202,12 +202,12 @@ const summaryCards = [
     icon: ClipboardCheck,
     label: "Evaluation Contract",
     value: "11 canonical cases",
-    text: "YAML cases define inputs and thresholds; evaluators own the scoring logic."
+    text: "Case files define inputs and thresholds; evaluators own the scoring logic."
   },
   {
     icon: BrainCircuit,
     label: "Judge Boundary",
-    value: "Judge != SUT",
+    value: "Separate models",
     text: "The scorer is configured separately from the system being evaluated."
   },
   {
@@ -230,7 +230,7 @@ export function Architecture(): JSX.Element {
     <section>
       <div className="page-head">
         <div>
-          <h1 className="page-title">Architecture View</h1>
+          <h1 className="page-title">Architecture</h1>
           <div className="page-subtitle">Evaluation framework - judge separation - governed RAG scoring</div>
         </div>
       </div>
@@ -341,7 +341,7 @@ export function Architecture(): JSX.Element {
             How the score becomes dashboard data
           </div>
           <div className="arch-score-flow">
-            {["DimensionScore", "EvalResult", "BenchmarkReport", "Results API", "React views"].map((item, index) => (
+            {["Dimension Score", "Evaluation Result", "Benchmark Report", "Results API", "React Views"].map((item, index) => (
               <div className="arch-score-step" key={item}>
                 <span>{String(index + 1).padStart(2, "0")}</span>
                 {item}

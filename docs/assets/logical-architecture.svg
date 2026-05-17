@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="520" viewBox="0 0 1180 520" role="img" aria-labelledby="title desc">
+  <title id="title">agentic-eval logical architecture</title>
+  <desc id="desc">Logical flow from benchmark setup through system execution, evaluation, reporting, and dashboard review.</desc>
+  <defs>
+    <style>
+      .bg { fill: #07101c; }
+      .band { fill: #0f1726; stroke: #263348; stroke-width: 1.2; }
+      .box { fill: #111c2d; stroke: #3a4a64; stroke-width: 1.3; rx: 10; }
+      .box-accent { fill: #13243a; stroke: #60a5fa; stroke-width: 1.4; rx: 10; }
+      .judge { fill: #24182c; stroke: #b778ff; stroke-width: 1.4; rx: 10; }
+      .report { fill: #10251f; stroke: #34d399; stroke-width: 1.4; rx: 10; }
+      .title { fill: #f8fbff; font: 700 18px Arial, sans-serif; }
+      .section { fill: #a8b6ca; font: 700 12px Arial, sans-serif; letter-spacing: .08em; }
+      .label { fill: #f8fbff; font: 700 15px Arial, sans-serif; }
+      .small { fill: #a8b6ca; font: 12px Arial, sans-serif; }
+      .mono { fill: #8fb1dd; font: 12px Menlo, Consolas, monospace; }
+      .arrow { stroke: #7c8ba4; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .arrow-strong { stroke: #60a5fa; stroke-width: 2.4; fill: none; marker-end: url(#arrowheadBlue); }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#7c8ba4" />
+    </marker>
+    <marker id="arrowheadBlue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#60a5fa" />
+    </marker>
+  </defs>
+
+  <rect class="bg" width="1180" height="520" rx="18" />
+  <text x="34" y="44" class="title">agentic-eval Logical Architecture</text>
+  <text x="34" y="68" class="small">Repeatable business test cases flow through a selected system, a separate judge, and evidence-backed reports.</text>
+
+  <rect x="30" y="100" width="1120" height="370" class="band" rx="16" />
+  <text x="58" y="132" class="section">BENCHMARK SETUP</text>
+  <text x="438" y="132" class="section">EXECUTION AND SCORING</text>
+  <text x="868" y="132" class="section">EVIDENCE AND REVIEW</text>
+
+  <rect x="58" y="160" width="210" height="92" class="box-accent" />
+  <text x="78" y="190" class="label">Dashboard Preset</text>
+  <text x="78" y="214" class="small">Mock, Local Ollama, API, Hybrid</text>
+  <text x="78" y="236" class="mono">POST /config/runtime</text>
+
+  <rect x="58" y="300" width="210" height="92" class="box" />
+  <text x="78" y="330" class="label">Business Test Cases</text>
+  <text x="78" y="354" class="small">Customer, scenario, policy chunks</text>
+  <text x="78" y="376" class="mono">test_cases/*.yaml</text>
+
+  <rect x="334" y="160" width="210" height="92" class="box-accent" />
+  <text x="354" y="190" class="label">Benchmark API</text>
+  <text x="354" y="214" class="small">Creates run and event stream</text>
+  <text x="354" y="236" class="mono">POST /benchmark/run</text>
+
+  <rect x="334" y="300" width="210" height="92" class="box" />
+  <text x="354" y="330" class="label">Benchmark Engine</text>
+  <text x="354" y="354" class="small">Loads cases and coordinates work</text>
+  <text x="354" y="376" class="mono">eval/benchmark.py</text>
+
+  <rect x="610" y="132" width="210" height="92" class="box-accent" />
+  <text x="630" y="162" class="label">System Under Test</text>
+  <text x="630" y="186" class="small">Mock, Ollama, API, or platform</text>
+  <text x="630" y="208" class="mono">eval/runners/</text>
+
+  <rect x="610" y="256" width="210" height="92" class="judge" />
+  <text x="630" y="286" class="label">Separate Judge</text>
+  <text x="630" y="310" class="small">Scores groundedness and precision</text>
+  <text x="630" y="332" class="mono">eval/judge/</text>
+
+  <rect x="610" y="380" width="210" height="62" class="box" />
+  <text x="630" y="410" class="label">Embedding Checks</text>
+  <text x="630" y="432" class="small">Relevance and consistency similarity</text>
+
+  <rect x="886" y="160" width="210" height="92" class="report" />
+  <text x="906" y="190" class="label">Benchmark Report</text>
+  <text x="906" y="214" class="small">Scores, evidence, latency, raw metadata</text>
+  <text x="906" y="236" class="mono">Benchmark Report</text>
+
+  <rect x="886" y="300" width="210" height="92" class="report" />
+  <text x="906" y="330" class="label">Review Surfaces</text>
+  <text x="906" y="354" class="small">React dashboard, JSON, HTML</text>
+  <text x="906" y="376" class="mono">/results + reports/</text>
+
+  <path d="M268 206 H334" class="arrow-strong" />
+  <path d="M163 252 V300" class="arrow" />
+  <path d="M268 346 H334" class="arrow" />
+  <path d="M439 252 V300" class="arrow-strong" />
+  <path d="M544 346 C570 346 580 178 610 178" class="arrow-strong" />
+  <path d="M820 178 C850 178 856 206 886 206" class="arrow-strong" />
+  <path d="M715 224 V256" class="arrow" />
+  <path d="M715 348 V380" class="arrow" />
+  <path d="M820 302 C850 302 856 206 886 206" class="arrow" />
+  <path d="M820 411 C852 411 854 346 886 346" class="arrow" />
+  <path d="M991 252 V300" class="arrow-strong" />
+
+  <rect x="58" y="424" width="486" height="28" fill="#0b111d" stroke="#263348" rx="6" />
+  <text x="74" y="443" class="small">Runtime rule: the judge model and system model are configured independently.</text>
+  <rect x="610" y="456" width="486" height="28" fill="#0b111d" stroke="#263348" rx="6" />
+  <text x="626" y="475" class="small">Governance output: every run keeps pass/fail status, evidence, hallucination flags, and latency.</text>
+</svg>

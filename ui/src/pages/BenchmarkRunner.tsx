@@ -22,7 +22,7 @@ const benchmarkPresets: Array<{ id: PresetId; label: string; description: string
   {
     id: "mock",
     label: "Mock",
-    description: "Fast deterministic judge and SUT for UI checks and repeatable tests."
+    description: "Fast deterministic judge and system for UI checks and repeatable tests."
   },
   {
     id: "local_ollama",
@@ -32,12 +32,12 @@ const benchmarkPresets: Array<{ id: PresetId; label: string; description: string
   {
     id: "api",
     label: "API",
-    description: "Cloud judge and cloud SUT for highest-quality evaluation."
+    description: "Cloud judge and cloud system for highest-quality evaluation."
   },
   {
     id: "hybrid",
     label: "Hybrid",
-    description: "API judge scores the local Ollama SUT."
+    description: "API judge scores the local Ollama system."
   }
 ];
 
@@ -112,7 +112,7 @@ export function BenchmarkRunner(): JSX.Element {
               })}
             </div>
             <div className="kpi-detail" style={{ marginBottom: 12 }}>
-              SUT: {modelDisplayName(config?.sut_model)}. Judge: {modelDisplayName(config?.eval_judge_model)}.
+              System Under Test: {modelDisplayName(config?.sut_model)}. Judge: {modelDisplayName(config?.eval_judge_model)}.
               Presets are saved to Settings before a run starts.
             </div>
             {configMutation.isError ? (
@@ -165,7 +165,7 @@ export function BenchmarkRunner(): JSX.Element {
                 ["Cases", "11"],
                 ["Passed", "10"],
                 ["Failed", "1"],
-                ["Avg Score", "0.88"],
+                ["Average Score", "0.88"],
                 ["Faithfulness", "0.89"],
                 ["Consistency", "0.93"]
               ].map(([label, value]) => (

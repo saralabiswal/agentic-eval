@@ -9,17 +9,18 @@ import {
 } from "recharts";
 
 import { getResults } from "../api/client";
+import { backendDisplayName } from "../utils/modelLabels";
 
 const fallback = [
-  { name: "Mock LLM", backend: "mock", color: "#8fb1dd", score: 0.88, latency: 2, passed: 10 },
+  { name: "Mock Model", backend: "mock", color: "#8fb1dd", score: 0.88, latency: 2, passed: 10 },
   { name: "Ollama 3.2", backend: "ollama", color: "#3b82f6", score: 0.84, latency: 3200, passed: 9 },
-  { name: "Claude API", backend: "api", color: "#ff4757", score: 0.93, latency: 6400, passed: 11 }
+  { name: "API Model", backend: "api", color: "#ff4757", score: 0.93, latency: 6400, passed: 11 }
 ];
 
 export function ModelComparison(): JSX.Element {
   const { data = [] } = useQuery({ queryKey: ["results"], queryFn: getResults });
   const live = data.map((run) => ({
-    name: String(run.model_backend).toUpperCase(),
+    name: backendDisplayName(String(run.model_backend)),
     backend: String(run.model_backend),
     color: "#ff4757",
     score: run.avg_score,
@@ -45,7 +46,7 @@ export function ModelComparison(): JSX.Element {
       <div className="page-head">
         <div>
           <h1 className="page-title">Model Comparison</h1>
-          <div className="page-subtitle">Quality and latency across LLM backends</div>
+          <div className="page-subtitle">Quality and latency across model backends</div>
         </div>
       </div>
 
@@ -72,10 +73,10 @@ export function ModelComparison(): JSX.Element {
               </span>
             </div>
             {[
-              ["Faith", "var(--faith)", model.faithfulness],
-              ["Rel", "var(--rel)", model.relevance],
-              ["Prec", "var(--prec)", model.precision],
-              ["Con", "var(--con)", model.consistency]
+              ["Faithfulness", "var(--faith)", model.faithfulness],
+              ["Relevance", "var(--rel)", model.relevance],
+              ["Context", "var(--prec)", model.precision],
+              ["Consistency", "var(--con)", model.consistency]
             ].map(([label, color, value]) => (
               <div className="dim-row" key={String(label)}>
                 <div className="dim-name">{label}</div>
@@ -122,10 +123,10 @@ export function ModelComparison(): JSX.Element {
             Recommendation Engine
           </div>
           {[
-            ["< 100ms SLO", "Mock LLM", "#8fb1dd", "Only Mock qualifies. Quality: 0.88."],
-            ["< 5,000ms SLO", "Ollama", "#3b82f6", "Real inference, no API cost."],
-            ["< 10,000ms SLO", "Claude API", "#ff4757", "Best quality for production eval."],
-            ["No SLO", "Claude API", "#ff4757", "Highest faithfulness and consistency."]
+            ["Under 100 ms", "Mock Model", "#8fb1dd", "Only Mock qualifies. Quality: 0.88."],
+            ["Under 5 seconds", "Ollama", "#3b82f6", "Real inference, no API cost."],
+            ["Under 10 seconds", "API Model", "#ff4757", "Best quality for production evaluation."],
+            ["No latency limit", "API Model", "#ff4757", "Highest faithfulness and consistency."]
           ].map(([slo, winner, color, note]) => (
             <div
               className="card"

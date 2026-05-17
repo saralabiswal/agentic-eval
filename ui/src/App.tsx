@@ -9,7 +9,7 @@ import {
   Scale,
   Settings
 } from "lucide-react";
-import { NavLink, Route, Routes, useLocation } from "react-router-dom";
+import { NavLink, Route, Routes } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
 import { getConfig } from "./api/client";
@@ -47,21 +47,8 @@ const navGroups = [
   }
 ];
 
-const titles: Record<string, string> = {
-  "/": "Dashboard",
-  "/benchmark": "Benchmark Runner",
-  "/compare": "Model Comparison",
-  "/about": "About",
-  "/architecture": "Architecture View",
-  "/cases": "Test Cases",
-  "/settings": "Settings"
-};
-
 export default function App(): JSX.Element {
-  const location = useLocation();
   const { data: config } = useQuery({ queryKey: ["config"], queryFn: getConfig });
-  const title =
-    location.pathname.startsWith("/results") ? "Results" : titles[location.pathname] ?? "Dashboard";
 
   return (
     <div className="shell">
@@ -73,7 +60,7 @@ export default function App(): JSX.Element {
             </div>
             <div className="logo-name">agentic-eval</div>
           </div>
-          <div className="logo-sub">LLM Evaluation Framework</div>
+          <div className="logo-sub">Model Evaluation Framework</div>
         </div>
         <nav className="nav">
           {navGroups.map((group) => (
@@ -99,10 +86,9 @@ export default function App(): JSX.Element {
       </aside>
       <div className="main">
         <header className="topbar">
-          <div className="bar-title">{title}</div>
           <div className="bar-right">
             <span className="pill">Judge: {modelDisplayName(config?.eval_judge_model)}</span>
-            <span className="pill">SUT: {modelDisplayName(config?.sut_model)}</span>
+            <span className="pill">System: {modelDisplayName(config?.sut_model)}</span>
             <NavLink className="button primary small" to="/benchmark">
               <Play size={13} />
               Run Benchmark
