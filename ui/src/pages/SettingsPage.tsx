@@ -2,11 +2,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 
 import { getConfig, testConnection, updateRuntimeConfig } from "../api/client";
-import type { ModelBackend, RuntimeConfig } from "../api/types";
+import type { JudgeBackend, ModelBackend, RuntimeConfig, SutBackend } from "../api/types";
 
 type ConfigRole = "judge" | "sut";
 
-const backendOptions: ModelBackend[] = ["mock", "ollama", "api"];
+const judgeBackendOptions: ModelBackend[] = ["mock", "ollama", "api"];
+const sutBackendOptions: ModelBackend[] = ["mock", "ollama", "api", "platform"];
 
 export function SettingsPage(): JSX.Element {
   const queryClient = useQueryClient();
@@ -59,7 +60,7 @@ export function SettingsPage(): JSX.Element {
             onModelChange={setJudgeModel}
             onSave={() =>
               saveMutation.mutate({
-                eval_judge_backend: judgeBackend,
+                eval_judge_backend: judgeBackend as JudgeBackend,
                 eval_judge_model: effectiveModel("judge", judgeBackend, judgeModel)
               })
             }
@@ -91,7 +92,7 @@ export function SettingsPage(): JSX.Element {
             onModelChange={setSutModel}
             onSave={() =>
               saveMutation.mutate({
-                sut_backend: sutBackend,
+                sut_backend: sutBackend as SutBackend,
                 sut_model: effectiveModel("sut", sutBackend, sutModel)
               })
             }
@@ -104,6 +105,7 @@ export function SettingsPage(): JSX.Element {
               })
             }
             role="sut"
+            options={sutBackendOptions}
             saveMessage={saveMutation.isPending ? "Saving..." : undefined}
             testMessage={testMutation.data?.target === "sut" ? testMutation.data.message : undefined}
           />
@@ -141,7 +143,7 @@ export function SettingsPage(): JSX.Element {
             <div className="kpi-detail" style={{ marginTop: 8 }}>
               {testMutation.data?.target === "platform"
                 ? testMutation.data.message
-                : "Disabled by default - direct runner active when platform is unavailable."}
+                : "Disabled by default. Enable it in .env before using the Banking Platform preset."}
             </div>
           </div>
         }
@@ -182,6 +184,7 @@ function BackendSelector({
   onModelChange,
   onSave,
   onTest,
+  options = judgeBackendOptions,
   role,
   saveMessage,
   testMessage
@@ -193,6 +196,7 @@ function BackendSelector({
   onModelChange: (value: string) => void;
   onSave: () => void;
   onTest: (apiKey: string) => void;
+  options?: ModelBackend[];
   role: ConfigRole;
   saveMessage?: string;
   testMessage?: string;
@@ -209,7 +213,7 @@ function BackendSelector({
     <>
       <div className="field-label">Backend Type</div>
       <div className="segmented" style={{ marginBottom: 10 }}>
-        {backendOptions.map((option) => (
+        {options.map((option) => (
           <button
             className={`segment ${backend === option ? "active" : ""}`}
             key={option}
@@ -222,9 +226,9 @@ function BackendSelector({
         ))}
       </div>
 
-      {backend === "mock" ? (
+      {backend === "mock" || backend === "platform" ? (
         <div style={{ marginBottom: 10 }}>
-          <div className="field-label">Fixture Model</div>
+          <div className="field-label">{backend === "platform" ? "Platform Adapter" : "Fixture Model"}</div>
           <input className="field" readOnly value={effectiveModel(role, backend, model)} />
         </div>
       ) : (
@@ -343,6 +347,9 @@ function StatusBox({ text, tone }: { text: string; tone: "neutral" | "success" |
 }
 
 function modelsFor(role: ConfigRole, backend: ModelBackend, config?: RuntimeConfig): string[] {
+  if (backend === "platform") {
+    return ["banking-platform"];
+  }
   if (backend === "api") {
     return config?.openai_model_options ?? ["gpt-4o", "gpt-4o-mini"];
   }
@@ -357,6 +364,9 @@ function modelsFor(role: ConfigRole, backend: ModelBackend, config?: RuntimeConf
 function effectiveModel(role: ConfigRole, backend: ModelBackend, model: string): string {
   if (backend === "mock") {
     return role === "judge" ? "mock-judge" : "mock-sut";
+  }
+  if (backend === "platform") {
+    return "banking-platform";
   }
   return model;
 }

@@ -13,7 +13,9 @@ from eval.core.runtime_config import (
     OLLAMA_JUDGE_MODEL_OPTIONS,
     OLLAMA_SUT_MODEL_OPTIONS,
     OPENAI_MODEL_OPTIONS,
+    JudgeBackend,
     RuntimeConfigUpdate,
+    SutBackend,
     runtime_config,
 )
 
@@ -23,9 +25,9 @@ router = APIRouter(prefix="/config", tags=["config"])
 class ConfigResponse(BaseModel):
     """Non-secret effective runtime configuration."""
 
-    eval_judge_backend: Literal["mock", "ollama", "api"]
+    eval_judge_backend: JudgeBackend
     eval_judge_model: str
-    sut_backend: Literal["mock", "ollama", "api"]
+    sut_backend: SutBackend
     sut_model: str
     ollama_base_url: str
     banking_platform_enabled: bool

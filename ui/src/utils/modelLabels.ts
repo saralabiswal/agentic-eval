@@ -14,6 +14,7 @@ export function modelDisplayName(model: string | null | undefined): string {
   if (normalized.startsWith("phi3.5")) return "Phi 3.5";
   if (normalized === "mock-judge") return "Mock Judge";
   if (normalized === "mock-sut") return "Mock System";
+  if (normalized === "banking-platform") return "Banking Platform";
   return value || "Not set";
 }
 
@@ -24,6 +25,7 @@ export function backendDisplayName(backend: string | null | undefined): string {
   if (backend === "mock") return "Mock";
   if (backend === "ollama") return "Ollama";
   if (backend === "api") return "API";
+  if (backend === "platform") return "Banking Platform";
   return backend || "Not set";
 }
 

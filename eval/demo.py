@@ -22,7 +22,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run the agentic-eval demo.")
     parser.add_argument("--cases", nargs="*", default=None)
     parser.add_argument("--all", action="store_true", help="Run all test cases")
-    parser.add_argument("--backend", choices=["mock", "ollama", "api"], default=None)
+    parser.add_argument("--backend", choices=["mock", "ollama", "api", "platform"], default=None)
     args = parser.parse_args()
     selected = None if args.all or args.cases is None else list(args.cases)
     asyncio.run(run_demo(selected, args.backend))

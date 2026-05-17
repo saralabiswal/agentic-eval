@@ -16,6 +16,15 @@ Ollama or cloud-backed model evaluation when a team is ready.
 
 Author: Sarala Biswal
 
+## Naming
+
+Keeping the name `agentic-eval` is the right choice. This repository is the
+evaluation framework: it measures whether any agentic system is faithful,
+relevant, stable, and efficient. The `banking-agentic-ai-platform` project is a
+real system under test that this framework can connect to for multi-layer
+pipeline evaluation. That keeps the product name reusable while still making
+the banking integration first-class.
+
 ## Business Problem
 
 Enterprises are adopting LLM agents for workflows such as payment risk
@@ -70,7 +79,7 @@ one-off prompt testing.
 
 - Case-file-backed benchmark scenarios for repeatable governed evaluation.
 - Separate judge model and system-under-test model configuration.
-- Mock, Ollama, and API execution modes.
+- Mock, Ollama, API, and banking platform execution modes.
 - FastAPI service for benchmark execution, runtime settings, results, test cases,
   and server-sent live progress events.
 - React dashboard for running benchmarks, browsing cases, inspecting results,
@@ -87,6 +96,7 @@ one-off prompt testing.
 | Local Ollama | `qwen2.5:7b` | `llama3.2` | No-key local model evaluation |
 | API | OpenAI via LiteLLM | OpenAI via LiteLLM | Higher-quality final evaluation |
 | Hybrid | API judge | Ollama system | Strong external judge over local model outputs |
+| Banking Platform | `qwen2.5:7b` or API judge | `banking-agentic-ai-platform` pipeline | Real multi-layer pipeline evaluation |
 
 The judge and system under test should remain separate. Asking the same model to
 grade itself can hide quality issues and creates self-evaluation bias.
@@ -195,6 +205,72 @@ Then run:
 ```bash
 make demo
 ```
+
+## Banking Platform Integration
+
+Use this path when you want `agentic-eval` to evaluate the real
+`banking-agentic-ai-platform` pipeline instead of a direct mock, Ollama, or API
+model runner.
+
+What this integration does:
+
+- Keeps `agentic-eval` on port `8001`.
+- Calls `banking-agentic-ai-platform` on port `8000`.
+- Sends each benchmark case to `POST /pipeline/run`.
+- Passes `customer_id`, `scenario`, and an uppercase `blueprint`.
+- Stores the platform response in benchmark raw metadata.
+- Scores the returned agent output with the configured judge model.
+
+Prerequisites:
+
+- Clone and start `banking-agentic-ai-platform`.
+- Confirm the banking platform API is listening at `http://localhost:8000`.
+- Keep this evaluation API on `http://localhost:8001`.
+- Use a judge that is separate from the banking platform system under test.
+
+In the banking platform repo, start the API with that repo's documented command.
+Then verify the pipeline endpoint:
+
+```bash
+curl -s -X POST http://localhost:8000/pipeline/run \
+  -H "Content-Type: application/json" \
+  -d '{"customer_id":"C001","scenario":"payment_risk_intervention","blueprint":"PAYMENT_RISK_INTERVENTION"}'
+```
+
+In this repo, configure `.env`:
+
+```env
+BANKING_PLATFORM_ENABLED=true
+BANKING_PLATFORM_URL=http://localhost:8000
+
+EVAL_JUDGE_BACKEND=ollama
+EVAL_JUDGE_MODEL=qwen2.5:7b
+
+SUT_BACKEND=platform
+SUT_MODEL=banking-platform
+```
+
+Start `agentic-eval`:
+
+```bash
+make dev
+cd ui
+corepack pnpm dev
+```
+
+Open `http://localhost:5173`, go to Settings, and use Banking Platform
+Integration -> Test Connection. Then go to Run Benchmark and choose the Banking
+Platform preset.
+
+You can also run one case from the terminal:
+
+```bash
+uv run python -m eval.demo --backend platform --cases PR-001
+```
+
+The adapter lives in `eval/runners/platform_runner.py`, and benchmark dispatch
+is handled by `eval/benchmark.py`. If `BANKING_PLATFORM_ENABLED=false`, platform
+runs fail fast instead of silently falling back to mock output.
 
 ## Running the Application
 

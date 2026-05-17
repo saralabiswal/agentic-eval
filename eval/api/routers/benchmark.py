@@ -11,7 +11,7 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel
 
 from eval.api import state
-from eval.benchmark import SUPPORTED_BACKENDS, BenchmarkEngine
+from eval.benchmark import SUPPORTED_BACKENDS, SUPPORTED_BACKENDS_LABEL, BenchmarkEngine
 from eval.core.runtime_config import runtime_config
 
 router = APIRouter(prefix="/benchmark", tags=["benchmark"])
@@ -36,7 +36,7 @@ async def run_benchmark(
     if backend not in SUPPORTED_BACKENDS:
         raise HTTPException(
             status_code=400,
-            detail=f"Unsupported backend '{backend}'. Expected one of: api, mock, ollama.",
+            detail=f"Unsupported backend '{backend}'. Expected one of: {SUPPORTED_BACKENDS_LABEL}.",
         )
 
     run_id = f"run_{uuid4().hex[:12]}"

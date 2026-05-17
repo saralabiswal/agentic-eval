@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     EVAL_JUDGE_BACKEND: Literal["mock", "ollama", "api"] = "mock"
     EVAL_JUDGE_MODEL: str = "gpt-4o"
 
-    SUT_BACKEND: Literal["mock", "ollama", "api"] = "mock"
+    SUT_BACKEND: Literal["mock", "ollama", "api", "platform"] = "mock"
     SUT_MODEL: str = "llama3.2"
 
     OLLAMA_BASE_URL: str = "http://localhost:11434"

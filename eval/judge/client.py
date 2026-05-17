@@ -11,7 +11,7 @@ import structlog
 
 from eval.core.config import settings
 from eval.core.exceptions import JudgeError
-from eval.core.runtime_config import Backend, runtime_config
+from eval.core.runtime_config import JudgeBackend, runtime_config
 from eval.judge.parsers import JudgeResponse, parse_judge_response
 from eval.judge.prompts import CONTEXT_PRECISION_PROMPT_CURRENT
 
@@ -225,7 +225,7 @@ class LiteLLMJudgeClient:
 
 
 def create_judge_client(
-    backend: Backend | None = None,
+    backend: JudgeBackend | None = None,
     model: str | None = None,
 ) -> JudgeClient:
     """Create a judge client from explicit or runtime configuration."""

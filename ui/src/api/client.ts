@@ -2,8 +2,9 @@ import type {
   BenchmarkReport,
   BenchmarkRunSummary,
   ConnectionTestResponse,
-  ModelBackend,
+  JudgeBackend,
   RuntimeConfig,
+  SutBackend,
   TestCase
 } from "./types";
 
@@ -74,9 +75,9 @@ export async function testConnection(body: {
 }
 
 export async function updateRuntimeConfig(body: {
-  eval_judge_backend?: ModelBackend;
+  eval_judge_backend?: JudgeBackend;
   eval_judge_model?: string;
-  sut_backend?: ModelBackend;
+  sut_backend?: SutBackend;
   sut_model?: string;
 }): Promise<RuntimeConfig> {
   const response = await fetch(`${apiBaseUrl}/config/runtime`, {

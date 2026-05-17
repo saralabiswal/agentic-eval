@@ -9,7 +9,8 @@ from pydantic import BaseModel, Field, model_validator
 
 from eval.core.config import settings
 
-Backend = Literal["mock", "ollama", "api"]
+JudgeBackend = Literal["mock", "ollama", "api"]
+SutBackend = Literal["mock", "ollama", "api", "platform"]
 
 OPENAI_MODEL_OPTIONS = ["gpt-4o", "gpt-4o-mini", "gpt-4.1", "gpt-4.1-mini"]
 OLLAMA_JUDGE_MODEL_OPTIONS = ["qwen2.5:7b", "mistral-nemo:12b", "llama3.2"]
@@ -19,9 +20,9 @@ OLLAMA_SUT_MODEL_OPTIONS = ["llama3.2", "mistral", "phi3.5"]
 class RuntimeConfig(BaseModel):
     """Effective non-secret model backend configuration for this process."""
 
-    eval_judge_backend: Backend = settings.EVAL_JUDGE_BACKEND
+    eval_judge_backend: JudgeBackend = settings.EVAL_JUDGE_BACKEND
     eval_judge_model: str = settings.EVAL_JUDGE_MODEL
-    sut_backend: Backend = settings.SUT_BACKEND
+    sut_backend: SutBackend = settings.SUT_BACKEND
     sut_model: str = settings.SUT_MODEL
 
     @model_validator(mode="after")
@@ -49,9 +50,9 @@ class RuntimeConfig(BaseModel):
 class RuntimeConfigUpdate(BaseModel):
     """Partial runtime configuration update from the Settings UI."""
 
-    eval_judge_backend: Backend | None = None
+    eval_judge_backend: JudgeBackend | None = None
     eval_judge_model: str | None = Field(default=None, min_length=1)
-    sut_backend: Backend | None = None
+    sut_backend: SutBackend | None = None
     sut_model: str | None = Field(default=None, min_length=1)
 
 

@@ -20,9 +20,11 @@ from eval.runners.api_runner import ApiRunner
 from eval.runners.base_runner import BaseRunner, RunnerOutput
 from eval.runners.mock_runner import MockRunner
 from eval.runners.ollama_runner import OllamaRunner
+from eval.runners.platform_runner import PlatformRunner
 
 BenchmarkEventSink = Callable[[dict[str, object]], Awaitable[None]]
-SUPPORTED_BACKENDS = {"mock", "ollama", "api"}
+SUPPORTED_BACKENDS = {"mock", "ollama", "api", "platform"}
+SUPPORTED_BACKENDS_LABEL = "api, mock, ollama, platform"
 
 
 class BenchmarkEngine:
@@ -51,7 +53,7 @@ class BenchmarkEngine:
         effective_config = runtime_config.get()
         backend = backend or effective_config.sut_backend
         if backend not in SUPPORTED_BACKENDS:
-            msg = f"Unsupported backend '{backend}'. Expected one of: api, mock, ollama."
+            msg = f"Unsupported backend '{backend}'. Expected one of: {SUPPORTED_BACKENDS_LABEL}."
             raise ValueError(msg)
 
         run_id = run_id or f"run_{uuid4().hex[:12]}"
@@ -182,7 +184,9 @@ class BenchmarkEngine:
                 primary=ApiRunner(model=model),
                 fallback=MockRunner(),
             )
-        msg = f"Unsupported backend '{backend}'. Expected one of: api, mock, ollama."
+        if backend == "platform":
+            return PlatformRunner()
+        msg = f"Unsupported backend '{backend}'. Expected one of: {SUPPORTED_BACKENDS_LABEL}."
         raise ValueError(msg)
 
     async def _emit(self, run_id: str, event: str, data: dict[str, object]) -> None:

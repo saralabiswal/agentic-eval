@@ -4,12 +4,12 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import { getConfig, startBenchmark, updateRuntimeConfig } from "../api/client";
-import type { ModelBackend, RuntimeConfig } from "../api/types";
+import type { JudgeBackend, RuntimeConfig, SutBackend } from "../api/types";
 import { LiveEvalLog } from "../components/LiveEvalLog";
 import { useBenchmarkEvents } from "../hooks/useBenchmarkEvents";
 import { modelDisplayName } from "../utils/modelLabels";
 
-type PresetId = "mock" | "local_ollama" | "api" | "hybrid";
+type PresetId = "mock" | "local_ollama" | "api" | "hybrid" | "banking_platform";
 
 const caseModes = [
   { label: "All Cases", value: "all" },
@@ -38,6 +38,11 @@ const benchmarkPresets: Array<{ id: PresetId; label: string; description: string
     id: "hybrid",
     label: "Hybrid",
     description: "API judge scores the local Ollama system."
+  },
+  {
+    id: "banking_platform",
+    label: "Banking Platform",
+    description: "Qwen judges responses from the banking-agentic-ai-platform pipeline."
   }
 ];
 
@@ -50,6 +55,8 @@ export function BenchmarkRunner(): JSX.Element {
   const activePreset = presetIdFor(config);
   const needsApiKey = activePreset === "api" || activePreset === "hybrid";
   const apiKeyMissing = needsApiKey && config?.has_openai_api_key === false;
+  const platformSelected = activePreset === "banking_platform";
+  const platformDisabled = platformSelected && config?.banking_platform_enabled === false;
   const configMutation = useMutation({
     mutationFn: updateRuntimeConfig,
     onSuccess: (updated) => {
@@ -95,18 +102,20 @@ export function BenchmarkRunner(): JSX.Element {
             <div className="field-label">Benchmark Preset</div>
             <div className="preset-grid" style={{ marginBottom: 12 }}>
               {benchmarkPresets.map((preset) => {
-                const disabled = presetRequiresApiKey(preset.id) && config?.has_openai_api_key === false;
+                const disabled =
+                  (presetRequiresApiKey(preset.id) && config?.has_openai_api_key === false)
+                  || (preset.id === "banking_platform" && config?.banking_platform_enabled === false);
                 return (
                   <button
                     className={`preset-button ${activePreset === preset.id ? "active" : ""}`}
                     disabled={disabled || configMutation.isPending || mutation.isPending}
                     key={preset.id}
                     onClick={() => configMutation.mutate(configForPreset(preset.id, config))}
-                    title={disabled ? "Configure an API key in Settings to use this preset." : preset.description}
+                    title={presetDisabledMessage(preset.id, config) ?? preset.description}
                     type="button"
                   >
                     <span>{activePreset === preset.id ? "● " : ""}{preset.label}</span>
-                    <small>{disabled ? "API key required" : preset.description}</small>
+                    <small>{presetDisabledMessage(preset.id, config) ?? preset.description}</small>
                   </button>
                 );
               })}
@@ -123,6 +132,11 @@ export function BenchmarkRunner(): JSX.Element {
             {apiKeyMissing ? (
               <div className="score warn" style={{ marginBottom: 12 }}>
                 Configure an API key in Settings before running this preset.
+              </div>
+            ) : null}
+            {platformDisabled ? (
+              <div className="score warn" style={{ marginBottom: 12 }}>
+                Enable the banking platform integration in `.env` before running this preset.
               </div>
             ) : null}
 
@@ -143,7 +157,7 @@ export function BenchmarkRunner(): JSX.Element {
 
             <button
               className="button primary"
-              disabled={mutation.isPending || configMutation.isPending || apiKeyMissing || !config}
+              disabled={mutation.isPending || configMutation.isPending || apiKeyMissing || platformDisabled || !config}
               type="submit"
             >
               <Play size={15} />
@@ -217,6 +231,13 @@ function presetIdFor(config?: RuntimeConfig): PresetId | "custom" {
   ) {
     return "hybrid";
   }
+  if (
+    config.eval_judge_backend === "ollama"
+    && config.eval_judge_model === preferredOllamaJudgeModel(config)
+    && config.sut_backend === "platform"
+  ) {
+    return "banking_platform";
+  }
   return "custom";
 }
 
@@ -228,9 +249,9 @@ function configForPreset(
   preset: PresetId,
   config?: RuntimeConfig
 ): {
-  eval_judge_backend: ModelBackend;
+  eval_judge_backend: JudgeBackend;
   eval_judge_model: string;
-  sut_backend: ModelBackend;
+  sut_backend: SutBackend;
   sut_model: string;
 } {
   if (preset === "mock") {
@@ -257,12 +278,30 @@ function configForPreset(
       sut_model: preferredOpenAIModel(config)
     };
   }
+  if (preset === "banking_platform") {
+    return {
+      eval_judge_backend: "ollama",
+      eval_judge_model: preferredOllamaJudgeModel(config),
+      sut_backend: "platform",
+      sut_model: "banking-platform"
+    };
+  }
   return {
     eval_judge_backend: "api",
     eval_judge_model: preferredOpenAIModel(config),
     sut_backend: "ollama",
     sut_model: preferredOllamaSutModel(config)
   };
+}
+
+function presetDisabledMessage(preset: PresetId, config?: RuntimeConfig): string | null {
+  if (presetRequiresApiKey(preset) && config?.has_openai_api_key === false) {
+    return "API key required";
+  }
+  if (preset === "banking_platform" && config?.banking_platform_enabled === false) {
+    return "Enable banking platform integration in .env";
+  }
+  return null;
 }
 
 function preferredOllamaJudgeModel(config?: RuntimeConfig): string {

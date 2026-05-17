@@ -94,6 +94,28 @@ def test_config_runtime_update_changes_effective_settings() -> None:
         runtime_config.reset()
 
 
+def test_config_runtime_update_accepts_banking_platform_sut() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/config/runtime",
+        json={
+            "eval_judge_backend": "ollama",
+            "eval_judge_model": "qwen2.5:7b",
+            "sut_backend": "platform",
+            "sut_model": "banking-platform",
+        },
+    )
+    try:
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["eval_judge_backend"] == "ollama"
+        assert payload["sut_backend"] == "platform"
+        assert payload["sut_model"] == "banking-platform"
+    finally:
+        runtime_config.reset()
+
+
 def test_config_runtime_update_rejects_invalid_api_model() -> None:
     client = TestClient(app)
 

@@ -1,4 +1,6 @@
-export type ModelBackend = "mock" | "ollama" | "api";
+export type JudgeBackend = "mock" | "ollama" | "api";
+export type SutBackend = "mock" | "ollama" | "api" | "platform";
+export type ModelBackend = JudgeBackend | SutBackend;
 
 export interface TestCaseInput {
   customer_profile: Record<string, unknown>;
@@ -101,9 +103,9 @@ export interface BenchmarkRunSummary {
 }
 
 export interface RuntimeConfig {
-  eval_judge_backend: ModelBackend;
+  eval_judge_backend: JudgeBackend;
   eval_judge_model: string;
-  sut_backend: ModelBackend;
+  sut_backend: SutBackend;
   sut_model: string;
   ollama_base_url: string;
   banking_platform_enabled: boolean;

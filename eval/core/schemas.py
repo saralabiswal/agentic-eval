@@ -73,7 +73,7 @@ class EvalResult(BaseModel):
 
     case_id: str
     run_id: str
-    model_backend: Literal["mock", "ollama", "api"]
+    model_backend: Literal["mock", "ollama", "api", "platform"]
     model_name: str
     timestamp: datetime
     faithfulness: DimensionScore
@@ -178,7 +178,7 @@ class BenchmarkReport(BaseModel):
 
     run_id: str
     run_timestamp: datetime
-    model_backend: Literal["mock", "ollama", "api"]
+    model_backend: Literal["mock", "ollama", "api", "platform"]
     total_cases: int
     passed: int
     failed: int
