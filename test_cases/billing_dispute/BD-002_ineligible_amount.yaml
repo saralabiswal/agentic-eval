@@ -1,0 +1,45 @@
+case_id: BD-002
+scenario: billing_dispute_resolution
+customer_id: C003
+description: "Dispute amount exceeds auto-resolution threshold"
+input:
+  customer_profile:
+    dispute_amount: 1240.00
+    days_since_transaction: 18
+    repeat_disputes_30d: 0
+    merchant_category: travel
+    risk_score: 0.36
+    crm_available: true
+    sources_degraded: []
+  retrieved_policy_chunks:
+    - document_id: KB-DISP-004
+      version: "3.0"
+      content: >
+        Disputes above $500 are not eligible for automated provisional
+        credit and must be routed to manual investigation review.
+    - document_id: KB-DISP-001
+      version: "4.2"
+      content: >
+        Consumer electronic transaction disputes reported within 60 days
+        are eligible for Reg E investigation.
+  scenario_context: >
+    Determine whether this high-dollar billing dispute may be
+    auto-resolved or must be sent to manual investigation.
+expected:
+  risk_level: MEDIUM
+  should_reference_policy: true
+  key_signals:
+    - dispute_amount
+    - manual_review_required
+    - within_60_days
+  should_not_claim:
+    - eligible_for_auto_resolution
+    - provisional_credit_approved
+  expected_action_type: MANUAL_DISPUTE_REVIEW
+evaluation_criteria:
+  faithfulness_threshold: 0.85
+  answer_relevance_threshold: 0.80
+  context_precision_threshold: 0.70
+  consistency_threshold: 0.90
+  consistency_runs: 5
+  max_latency_ms: 10000

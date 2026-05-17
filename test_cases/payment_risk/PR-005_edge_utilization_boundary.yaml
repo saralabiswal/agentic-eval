@@ -1,0 +1,49 @@
+case_id: PR-005
+scenario: payment_risk_intervention
+customer_id: C002
+description: "Utilization exactly at the 70 percent policy boundary"
+input:
+  customer_profile:
+    card_utilization: 0.70
+    missed_pmts_90d: 2
+    checking_balance: 820.00
+    overdraft_count_30d: 0
+    risk_score: 0.58
+    crm_available: true
+    sources_degraded: []
+  retrieved_policy_chunks:
+    - document_id: KB-PAY-007
+      version: "1.8"
+      content: >
+        Card utilization above 70% combined with 2 or more missed
+        payments in the prior 90 days indicates critical payment risk.
+        Utilization at exactly 70% should be treated as high risk
+        rather than critical unless another critical signal is present.
+    - document_id: KB-HARD-001
+      version: "2.3"
+      content: >
+        Customers with 2 or more missed payments in a 90-day window
+        and checking balance below $500 are eligible for hardship
+        program enrollment.
+  scenario_context: >
+    Assess risk at the utilization threshold boundary and avoid
+    overstating critical risk unless policy conditions are met.
+expected:
+  risk_level: HIGH
+  should_reference_policy: true
+  key_signals:
+    - utilization_boundary
+    - missed_payments
+    - checking_balance
+  should_not_claim:
+    - utilization_above_70
+    - hardship_eligible
+    - critical_payment_risk
+  expected_action_type: PAYMENT_PLAN_REVIEW
+evaluation_criteria:
+  faithfulness_threshold: 0.85
+  answer_relevance_threshold: 0.80
+  context_precision_threshold: 0.70
+  consistency_threshold: 0.90
+  consistency_runs: 5
+  max_latency_ms: 10000

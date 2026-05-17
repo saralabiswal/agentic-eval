@@ -1,0 +1,48 @@
+case_id: CP-002
+scenario: churn_prevention
+customer_id: C001
+description: "Low engagement with no app activity for 45 days"
+input:
+  customer_profile:
+    churn_probability: 0.68
+    days_since_last_app_activity: 45
+    nps_delta_30d: -4
+    card_utilization: 0.28
+    missed_pmts_90d: 0
+    checking_balance: 2650.00
+    risk_score: 0.20
+    crm_available: true
+    sources_degraded: []
+  retrieved_policy_chunks:
+    - document_id: KB-CHURN-002
+      version: "1.0"
+      content: >
+        Customers with no digital activity for 30 or more days and
+        churn probability above 0.60 should receive re-engagement
+        messaging before escalation to retention specialists.
+    - document_id: KB-CHURN-003
+      version: "1.2"
+      content: >
+        Re-engagement messaging must not imply account delinquency
+        unless payment data indicates delinquency.
+  scenario_context: >
+    Assess whether low digital engagement warrants churn prevention
+    action and recommend the appropriate first step.
+expected:
+  risk_level: MEDIUM
+  should_reference_policy: true
+  key_signals:
+    - no_app_activity
+    - churn_probability
+    - re_engagement
+  should_not_claim:
+    - delinquency
+    - nps_collapse
+  expected_action_type: RE_ENGAGEMENT_MESSAGE
+evaluation_criteria:
+  faithfulness_threshold: 0.85
+  answer_relevance_threshold: 0.80
+  context_precision_threshold: 0.70
+  consistency_threshold: 0.90
+  consistency_runs: 5
+  max_latency_ms: 10000

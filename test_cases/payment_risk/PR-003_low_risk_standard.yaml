@@ -1,0 +1,47 @@
+case_id: PR-003
+scenario: payment_risk_intervention
+customer_id: C001
+description: "Low-risk customer with standard payment profile"
+input:
+  customer_profile:
+    card_utilization: 0.24
+    missed_pmts_90d: 0
+    checking_balance: 4280.25
+    overdraft_count_30d: 0
+    risk_score: 0.12
+    crm_available: true
+    sources_degraded: []
+  retrieved_policy_chunks:
+    - document_id: KB-PAY-002
+      version: "1.2"
+      content: >
+        Customers with no missed payments, utilization below 50%,
+        and checking balance above $1000 should remain in standard
+        monitoring unless new risk signals appear.
+    - document_id: KB-SERV-004
+      version: "2.0"
+      content: >
+        Low-risk customers may receive education-only messaging when
+        no hardship or delinquency signal is present.
+  scenario_context: >
+    Assess whether this customer requires payment risk intervention
+    or standard monitoring.
+expected:
+  risk_level: LOW
+  should_reference_policy: true
+  key_signals:
+    - no_missed_payments
+    - low_utilization
+    - checking_balance
+  should_not_claim:
+    - hardship_eligible
+    - delinquent
+    - overdraft_pattern
+  expected_action_type: STANDARD_MONITORING
+evaluation_criteria:
+  faithfulness_threshold: 0.85
+  answer_relevance_threshold: 0.80
+  context_precision_threshold: 0.70
+  consistency_threshold: 0.90
+  consistency_runs: 5
+  max_latency_ms: 10000

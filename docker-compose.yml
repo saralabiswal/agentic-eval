@@ -1,0 +1,29 @@
+name: agentic-eval
+
+services:
+
+  # ── Ollama (optional local LLM — judge or SUT) ──────────────────────────
+  # Not required to run evaluation. Default mode uses mock judge + mock SUT.
+  # Start this service only when using LLM_BACKEND=ollama or JUDGE_BACKEND=ollama
+  #
+  # After starting: docker exec -it agentic-eval-ollama ollama pull llama3.2
+  ollama:
+    image: ollama/ollama:latest
+    container_name: agentic-eval-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:11434/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+networks:
+  default:
+    driver: bridge
+
+volumes:
+  ollama_data:

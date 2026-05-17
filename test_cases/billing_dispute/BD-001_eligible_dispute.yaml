@@ -1,0 +1,46 @@
+case_id: BD-001
+scenario: billing_dispute_resolution
+customer_id: C001
+description: "Valid card dispute eligible under Reg E timing"
+input:
+  customer_profile:
+    dispute_amount: 84.19
+    days_since_transaction: 12
+    repeat_disputes_30d: 0
+    merchant_category: streaming_services
+    risk_score: 0.18
+    crm_available: true
+    sources_degraded: []
+  retrieved_policy_chunks:
+    - document_id: KB-DISP-001
+      version: "4.2"
+      content: >
+        Consumer electronic transaction disputes reported within 60 days
+        are eligible for Reg E investigation when the customer denies
+        authorization or reports a billing error.
+    - document_id: KB-DISP-003
+      version: "2.7"
+      content: >
+        Disputes below $100 with no repeat dispute pattern may be
+        provisionally credited while investigation proceeds.
+  scenario_context: >
+    Determine whether the billing dispute is eligible for automated
+    resolution and recommend the correct action.
+expected:
+  risk_level: LOW
+  should_reference_policy: true
+  key_signals:
+    - dispute_amount
+    - within_60_days
+    - no_repeat_dispute
+  should_not_claim:
+    - amount_exceeds_threshold
+    - repeat_dispute_pattern
+  expected_action_type: PROVISIONAL_CREDIT_REVIEW
+evaluation_criteria:
+  faithfulness_threshold: 0.85
+  answer_relevance_threshold: 0.80
+  context_precision_threshold: 0.70
+  consistency_threshold: 0.90
+  consistency_runs: 5
+  max_latency_ms: 10000

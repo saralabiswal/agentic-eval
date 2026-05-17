@@ -1,0 +1,49 @@
+case_id: CP-003
+scenario: churn_prevention
+customer_id: C002
+description: "Customer re-engaged after a prior retention offer"
+input:
+  customer_profile:
+    churn_probability: 0.39
+    prior_offer_accepted: true
+    login_frequency_delta_30d: 0.24
+    nps_delta_30d: 8
+    card_utilization: 0.51
+    missed_pmts_90d: 0
+    checking_balance: 1090.65
+    risk_score: 0.33
+    crm_available: true
+    sources_degraded: []
+  retrieved_policy_chunks:
+    - document_id: KB-CHURN-005
+      version: "1.0"
+      content: >
+        Customers who accepted a retention offer and show improved
+        engagement should move to post-intervention monitoring rather
+        than receive a duplicate offer.
+    - document_id: KB-CHURN-006
+      version: "1.0"
+      content: >
+        Duplicate retention offers within 60 days require manager
+        approval and should not be automatically triggered.
+  scenario_context: >
+    Assess churn status after a prior intervention and determine
+    whether to send another offer or move to monitoring.
+expected:
+  risk_level: LOW
+  should_reference_policy: true
+  key_signals:
+    - prior_offer_accepted
+    - improved_engagement
+    - lower_churn_probability
+  should_not_claim:
+    - duplicate_offer_approved
+    - no_prior_offer
+  expected_action_type: POST_INTERVENTION_MONITORING
+evaluation_criteria:
+  faithfulness_threshold: 0.85
+  answer_relevance_threshold: 0.80
+  context_precision_threshold: 0.70
+  consistency_threshold: 0.90
+  consistency_runs: 5
+  max_latency_ms: 10000

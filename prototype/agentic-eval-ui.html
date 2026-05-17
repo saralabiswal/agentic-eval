@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>agentic-eval — LLM Evaluation Framework</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#03050a;--surface:#070b12;--card:#0a0f1a;--card2:#0e1422;
+  --border:#141d2e;--border2:#1c2840;--text:#c8d8f0;--mid:#5a7090;--dim:#2a3d58;
+  --faith:#ff4757;--rel:#a855f7;--prec:#f59e0b;--con:#10b981;--lat:#06b6d4;
+  --pass:#10b981;--warn:#f59e0b;--fail:#ff4757;
+  --mono:'JetBrains Mono',monospace;--dis:'Syne',sans-serif;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--dis);overflow:hidden}
+.shell{display:flex;height:100vh}
+.sidebar{width:216px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.logo{padding:18px 16px 14px;border-bottom:1px solid var(--border)}
+.logo-row{display:flex;align-items:center;gap:8px;margin-bottom:3px}
+.logo-icon{width:26px;height:26px;background:linear-gradient(135deg,var(--faith),#fb923c);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.logo-name{font-size:14px;font-weight:800;letter-spacing:-0.03em;color:#f0f8ff}
+.logo-sub{font-family:var(--mono);font-size:8px;color:var(--dim);letter-spacing:0.14em;text-transform:uppercase}
+.nav{flex:1;padding:10px 6px;overflow-y:auto}
+.navs{margin-bottom:18px}
+.navs-label{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--dim);padding:0 8px 5px}
+.ni{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:500;color:var(--mid);transition:all .15s;margin-bottom:1px;border:1px solid transparent;user-select:none}
+.ni:hover{background:var(--card);color:var(--text)}
+.ni.on{background:rgba(255,71,87,.1);border-color:rgba(255,71,87,.2);color:var(--faith)}
+.ni-ic{font-size:11px;width:14px;text-align:center;flex-shrink:0}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.bar{height:50px;flex-shrink:0;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 22px}
+.bar-title{font-size:13px;font-weight:700;color:#e8f2ff}
+.bar-r{display:flex;align-items:center;gap:10px}
+.pill{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:20px;border:1px solid var(--border2);color:var(--mid);background:var(--card)}
+.pg{flex:1;overflow-y:auto;padding:18px 22px}
+.pt{font-size:21px;font-weight:800;letter-spacing:-0.04em;color:#f0f8ff;margin-bottom:3px}
+.ps{font-family:var(--mono);font-size:9px;color:var(--mid);letter-spacing:.04em}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:6px;cursor:pointer;font-family:var(--dis);font-size:11px;font-weight:600;border:1px solid;transition:all .15s;white-space:nowrap;user-select:none}
+.bp{background:var(--faith);border-color:var(--faith);color:#fff}.bp:hover{opacity:.9}
+.bg{background:transparent;border-color:var(--border2);color:var(--mid)}.bg:hover{border-color:var(--mid);color:var(--text)}
+.bs{padding:5px 10px;font-size:10px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:9px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:13px 15px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--c,var(--border))}
+.kl{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);margin-bottom:7px}
+.kv{font-size:26px;font-weight:800;letter-spacing:-0.04em;line-height:1;margin-bottom:3px}
+.kd{font-family:var(--mono);font-size:9px;color:var(--mid)}
+.dt{width:100%;border-collapse:collapse}
+.dt th{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);padding:9px 13px;text-align:left;border-bottom:1px solid var(--border)}
+.dt td{padding:10px 13px;font-size:11px;color:var(--text);border-bottom:1px solid var(--border)}
+.dt tr:last-child td{border-bottom:none}
+.dt tr:hover td{background:rgba(255,255,255,.012)}
+.sc{font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 7px;border-radius:4px;border:1px solid;display:inline-block}
+.sp{color:var(--pass);border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.08)}
+.sw{color:var(--warn);border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.08)}
+.sf{color:var(--fail);border-color:rgba(255,71,87,.3);background:rgba(255,71,87,.08)}
+.dc{font-family:var(--mono);font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;border:1px solid transparent;display:inline-block;white-space:nowrap}
+.fl{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);margin-bottom:5px}
+.fi{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:7px 11px;color:var(--text);font-family:var(--mono);font-size:10px;outline:none}
+.fi:focus{border-color:var(--faith)}
+.sr{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--border)}
+.sr:last-child{border-bottom:none}
+.sdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.sn{font-size:10px;font-weight:600;flex:1}
+.sb{width:70px;height:3px;background:var(--border2);border-radius:2px;overflow:hidden}
+.sbf{height:100%;border-radius:2px}
+.sv{font-family:var(--mono);font-size:10px;font-weight:700;width:30px;text-align:right}
+.bt{display:flex;gap:5px}
+.bb{flex:1;padding:7px 5px;border-radius:5px;cursor:pointer;font-family:var(--dis);font-size:10px;font-weight:600;border:1px solid var(--border2);background:transparent;color:var(--mid);transition:all .15s;text-align:center;user-select:none}
+.bb:hover{border-color:var(--mid);color:var(--text)}
+.bb.on{border-color:var(--faith);background:rgba(255,71,87,.1);color:var(--faith)}
+.ss{background:var(--card);border:1px solid var(--border);border-radius:9px;overflow:hidden;margin-bottom:12px}
+.sh{padding:13px 16px 11px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.sht{font-size:12px;font-weight:700;color:#e8f2ff}
+.shs{font-family:var(--mono);font-size:8px;color:var(--dim);margin-top:2px}
+.sb2{padding:14px 16px}
+.cs{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;margin-top:9px}
+.cd{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.cd.ok{background:var(--pass);box-shadow:0 0 5px var(--pass)}
+.cd.er{background:var(--fail)}
+.cd.id{background:var(--dim)}
+.le{display:flex;align-items:flex-start;gap:9px;padding:6px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:9px}
+.lt{color:var(--dim);width:70px;flex-shrink:0}
+.lta{font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;border:1px solid;flex-shrink:0}
+.lm{color:var(--mid);flex:1;line-height:1.5}
+.ag{display:grid;grid-template-columns:200px 1fr 210px;gap:12px;height:calc(100vh - 110px)}
+.an{overflow-y:auto}
+.ani{display:flex;align-items:center;gap:7px;padding:9px 10px;border-radius:7px;cursor:pointer;margin-bottom:3px;border:1px solid transparent;transition:all .15s;user-select:none}
+.ani:hover{background:var(--card)}
+.ani.on{border-color:var(--ic,var(--border));background:var(--ib,var(--card))}
+.ann{width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:8px;font-weight:700;flex-shrink:0}
+.ane{flex:1;min-width:0}
+.annt{font-size:10px;font-weight:600}
+.anns{font-family:var(--mono);font-size:8px;color:var(--dim);margin-top:1px}
+.ada{background:var(--card);border:1px solid var(--border);border-radius:9px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.adv{overflow-y:auto}
+.dc2{background:var(--card);border:1px solid var(--border);border-radius:9px;overflow:hidden}
+.dh{padding:13px 14px;border-bottom:1px solid var(--border)}
+.dhn{font-family:var(--mono);font-size:8px;font-weight:700;margin-bottom:2px}
+.dhname{font-size:14px;font-weight:800;letter-spacing:-0.03em;color:#f0f8ff}
+.dhs{font-family:var(--mono);font-size:8px;color:var(--dim);margin-top:2px}
+.dtab{display:flex;border-bottom:1px solid var(--border)}
+.dtt{padding:8px 12px;font-size:10px;font-weight:600;cursor:pointer;color:var(--mid);border-bottom:2px solid transparent;user-select:none;transition:all .15s}
+.dtt:hover{color:var(--text)}
+.dtt.on{border-bottom-color:var(--faith);color:var(--faith)}
+.db{padding:12px 14px;font-size:10px;color:var(--mid);line-height:1.7}
+.dn{border-radius:7px;padding:10px 13px;border:1px solid;position:relative;cursor:pointer;transition:all .2s;margin-bottom:0}
+.dnh{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.dnid{font-family:var(--mono);font-size:8px;font-weight:700}
+.dnname{font-size:11px;font-weight:700;color:#e8f2ff}
+.dnsub{font-family:var(--mono);font-size:8px;color:var(--dim);margin-top:1px}
+.dedge{width:1px;height:18px;background:var(--border2);margin:0 auto;position:relative;display:flex;align-items:center;justify-content:center}
+.del{position:absolute;font-family:var(--mono);font-size:7px;color:var(--dim);background:var(--bg);padding:0 3px;white-space:nowrap;border:1px solid var(--border);border-radius:6px}
+.eg{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.emn{border-radius:5px;padding:8px 9px;border:1px solid;cursor:pointer;transition:all .2s}
+.emni{font-family:var(--mono);font-size:7px;font-weight:700;margin-bottom:2px}
+.emnn{font-size:9px;font-weight:600;color:#e8f2ff}
+.slrow{margin-bottom:12px}
+.slh{display:flex;justify-content:space-between;margin-bottom:5px}
+.sln{font-size:10px;font-weight:600}
+.slv{font-family:var(--mono);font-size:10px;font-weight:700}
+.sltr{width:100%;height:4px;border-radius:2px;background:var(--border2)}
+.slf{height:100%;border-radius:2px}
+@keyframes fadein{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+.fi2{animation:fadein .2s ease forwards}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+</style>
+</head>
+<body>
+<div class="shell">
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-row">
+      <div class="logo-icon">⚖</div>
+      <div class="logo-name">agentic-eval</div>
+    </div>
+    <div class="logo-sub">LLM Evaluation Framework</div>
+  </div>
+  <div class="nav">
+    <div class="navs">
+      <div class="navs-label">Evaluate</div>
+      <div class="ni on" onclick="go('dash')"><span class="ni-ic">◈</span>Dashboard</div>
+      <div class="ni" onclick="go('run')"><span class="ni-ic">▶</span>Benchmark Runner</div>
+      <div class="ni" onclick="go('res')"><span class="ni-ic">≡</span>Results</div>
+      <div class="ni" onclick="go('cmp')"><span class="ni-ic">⇄</span>Model Comparison</div>
+    </div>
+    <div class="navs">
+      <div class="navs-label">Understand</div>
+      <div class="ni" onclick="go('arch')"><span class="ni-ic">◎</span>Architecture</div>
+      <div class="ni" onclick="go('cases')"><span class="ni-ic">□</span>Test Cases</div>
+    </div>
+    <div class="navs">
+      <div class="navs-label">Configure</div>
+      <div class="ni" onclick="go('cfg')"><span class="ni-ic">⚙</span>Settings</div>
+    </div>
+  </div>
+</div>
+<div class="main">
+  <div class="bar">
+    <div class="bar-title" id="bt">Dashboard</div>
+    <div class="bar-r">
+      <span class="pill" id="js">Judge: Mock</span>
+      <span class="pill" id="ss2">SUT: Mock</span>
+      <button class="btn bp bs" onclick="go('run')">▶ Run Benchmark</button>
+    </div>
+  </div>
+  <div class="pg fi2" id="pg"></div>
+</div>
+</div>
+<script>
+var page='dash',expCase=null,archSel='faith',archTab='prob',
+    rState='idle',rIdx=0,
+    st={judge:'mock',sut:'mock',ola:'id',api:'id',plat:false};
+
+var TITLES={dash:'Dashboard',run:'Benchmark Runner',res:'Results',cmp:'Model Comparison',arch:'Architecture View',cases:'Test Cases',cfg:'Settings'};
+
+var RUNS=[
+  {id:'run-001',date:'May 15 10:42',back:'mock',  cases:11,pass:10,sc:0.88,fa:0.89,co:0.93},
+  {id:'run-002',date:'May 15 09:11',back:'ollama',cases:11,pass:9, sc:0.84,fa:0.85,co:0.88},
+  {id:'run-003',date:'May 14 16:30',back:'api',   cases:11,pass:11,sc:0.93,fa:0.94,co:0.96},
+];
+
+var CASES=[
+  {id:'PR-001',sc:'Payment Risk',  cu:'C002 Marcus Webb', de:'High risk · CRM degraded',   fa:0.91,re:0.88,pr:0.72,co:0.94,la:2, sc2:0.87,ok:true},
+  {id:'PR-002',sc:'Payment Risk',  cu:'C002 Marcus Webb', de:'High risk · full context',   fa:0.96,re:0.92,pr:0.85,co:0.96,la:2, sc2:0.93,ok:true},
+  {id:'PR-003',sc:'Payment Risk',  cu:'C001 Alexandra',   de:'Low risk · standard',        fa:0.98,re:0.94,pr:0.90,co:0.98,la:1, sc2:0.96,ok:true},
+  {id:'PR-004',sc:'Payment Risk',  cu:'C003 Priya',       de:'Medium risk · partial',      fa:0.88,re:0.82,pr:0.68,co:0.91,la:2, sc2:0.83,ok:true},
+  {id:'PR-005',sc:'Payment Risk',  cu:'C002 Marcus Webb', de:'Edge · 70% util boundary',   fa:0.85,re:0.80,pr:0.65,co:0.88,la:2, sc2:0.80,ok:false},
+  {id:'BD-001',sc:'Billing',       cu:'C001 Alexandra',   de:'CFPB Reg E eligible',        fa:0.93,re:0.90,pr:0.82,co:0.95,la:1, sc2:0.91,ok:true},
+  {id:'BD-002',sc:'Billing',       cu:'C003 Priya',       de:'Amount exceeds threshold',   fa:0.90,re:0.86,pr:0.78,co:0.93,la:1, sc2:0.88,ok:true},
+  {id:'BD-003',sc:'Billing',       cu:'C002 Marcus Webb', de:'Repeat dispute 30d',         fa:0.87,re:0.83,pr:0.74,co:0.90,la:1, sc2:0.85,ok:true},
+  {id:'CP-001',sc:'Churn',         cu:'C002 Marcus Webb', de:'High churn · NPS -20pt',     fa:0.92,re:0.89,pr:0.80,co:0.94,la:2, sc2:0.90,ok:true},
+  {id:'CP-002',sc:'Churn',         cu:'C003 Priya',       de:'Low engagement · 45d',       fa:0.89,re:0.85,pr:0.75,co:0.92,la:2, sc2:0.86,ok:true},
+  {id:'CP-003',sc:'Churn',         cu:'C001 Alexandra',   de:'Post-intervention re-engage',fa:0.95,re:0.91,pr:0.84,co:0.97,la:1, sc2:0.92,ok:true},
+];
+
+var ARCH=[
+  {id:'tc',  num:'01',color:'#5a7090',name:'Test Cases',       sub:'YAML · 11 cases'},
+  {id:'run2',num:'02',color:'#3b82f6',name:'Runner / SUT',     sub:'Mock · Ollama · API'},
+  {id:'faith',num:'03',color:'#ff4757',name:'Faithfulness',    sub:'LLM-as-judge · hallucination'},
+  {id:'rel', num:'04',color:'#a855f7',name:'Answer Relevance', sub:'Embedding similarity'},
+  {id:'prec',num:'05',color:'#f59e0b',name:'Context Precision',sub:'Retrieval quality'},
+  {id:'con', num:'06',color:'#10b981',name:'Consistency',      sub:'Multi-run variance'},
+  {id:'lat', num:'07',color:'#06b6d4',name:'Latency / Quality',sub:'Model comparison'},
+  {id:'judge',num:'J',color:'#fb923c',name:'Judge LLM',        sub:'Separate from SUT'},
+  {id:'eng', num:'E', color:'#8b5cf6',name:'Benchmark Engine', sub:'Orchestration · SSE'},
+];
+
+var DETAIL={
+  faith:{
+    prob:'Faithfulness measures whether every factual claim in the agent output can be traced to retrieved context. In banking, a hallucinated eligibility claim is not just a quality problem — it is a potential UDAAP or fair lending violation. When CRM is degraded, the agent must not claim NPS or tenure data it was never given.',
+    how:['Extract all factual claims from agent output','For each claim, find evidence in retrieved context','Rate: SUPPORTED | PARTIALLY_SUPPORTED | UNSUPPORTED','Score = supported_claims / total_claims','Record all UNSUPPORTED claims as hallucinations list'],
+    dec:[['Judge separation','Judge ≠ SUT','Self-evaluation inflates scores'],['Hallucination list','Record all claims','Aggregate score hides specific failures'],['should_not_claim','YAML guards','Domain expert defines what cannot be claimed']],
+    scores:[{dim:'PR-001',v:0.91,ok:true},{dim:'PR-002',v:0.96,ok:true},{dim:'PR-005',v:0.85,ok:false}]
+  },
+  con:{
+    prob:'Non-deterministic LLM outputs are a compliance risk. If the same customer produces CRITICAL risk on Monday and HIGH on Thursday with identical inputs, the bank cannot defend its decisions. Consistency below 0.90 means the agent cannot be relied upon as a stable regulatory signal.',
+    how:['Run identical test case 5 times','Embed each output with sentence-transformers','Compute pairwise cosine similarity (5×5 matrix)','Score = mean of upper triangle (10 pairs)','Score < 0.90 = inconsistent = compliance risk'],
+    dec:[['5 runs default','Statistically sound','3 = too few, 10 = too slow'],['Semantic similarity','Embedding not string match','Paraphrases should count as consistent'],['0.90 threshold','Regulatory framing','Stable decisions are a compliance requirement']],
+    scores:[{dim:'PR-001',v:0.94,ok:true},{dim:'PR-002',v:0.96,ok:true},{dim:'PR-004',v:0.91,ok:true}]
+  }
+};
+ARCH.forEach(function(c){if(!DETAIL[c.id])DETAIL[c.id]=DETAIL['faith'];});
+
+var LOGS=[
+  {ts:'10:42:33.000',tag:'START',  tc:'#3b82f6',msg:'Benchmark started · 11 cases · mock backend'},
+  {ts:'10:42:33.002',tag:'CASE',   tc:'#5a7090',msg:'PR-001 — Marcus Webb / High Risk / CRM degraded'},
+  {ts:'10:42:33.004',tag:'RUNNER', tc:'#3b82f6',msg:'DirectRunner invoked · mock LLM response loaded'},
+  {ts:'10:42:33.006',tag:'FAITH',  tc:'#ff4757',msg:'FaithfulnessEvaluator → 9 claims, 8 supported → 0.91 ✓'},
+  {ts:'10:42:33.008',tag:'REL',    tc:'#a855f7',msg:'AnswerRelevanceEvaluator → cosine sim: 0.88 ✓'},
+  {ts:'10:42:33.010',tag:'PREC',   tc:'#f59e0b',msg:'ContextPrecisionEvaluator → 2/3 chunks relevant → 0.72 ⚠'},
+  {ts:'10:42:33.035',tag:'CON',    tc:'#10b981',msg:'ConsistencyEvaluator → 5 runs → pairwise: 0.94 ✓'},
+  {ts:'10:42:33.036',tag:'PASS',   tc:'#10b981',msg:'PR-001 PASS · overall: 0.87 · latency: 2ms'},
+  {ts:'10:42:33.038',tag:'CASE',   tc:'#5a7090',msg:'PR-002 — Marcus Webb / High Risk / full context'},
+  {ts:'10:42:33.055',tag:'PASS',   tc:'#10b981',msg:'PR-002 PASS · overall: 0.93 · latency: 2ms'},
+  {ts:'10:42:33.057',tag:'CASE',   tc:'#5a7090',msg:'PR-003 — Alexandra Chen / Low Risk / standard'},
+  {ts:'10:42:33.072',tag:'PASS',   tc:'#10b981',msg:'PR-003 PASS · overall: 0.96 · latency: 1ms'},
+  {ts:'10:42:33.090',tag:'WARN',   tc:'#f59e0b',msg:'PR-005 context precision 0.65 below threshold 0.70'},
+  {ts:'10:42:33.091',tag:'FAIL',   tc:'#ff4757',msg:'PR-005 FAIL · overall: 0.80 · 1 dimension below threshold'},
+  {ts:'10:42:33.120',tag:'DONE',   tc:'#10b981',msg:'Complete · 10/11 passed · avg: 0.88 · report saved'},
+];
+
+function go(p){
+  page=p;
+  document.querySelectorAll('.ni').forEach(function(e){e.classList.remove('on');});
+  document.querySelectorAll('.ni').forEach(function(e){
+    if((e.getAttribute('onclick')||'').indexOf("'"+p+"'")>-1)e.classList.add('on');
+  });
+  document.getElementById('bt').textContent=TITLES[p];
+  var el=document.getElementById('pg');
+  el.className='pg';void el.offsetWidth;el.className='pg fi2';
+  ({dash:dash,run:run,res:res,cmp:cmp,arch:arch,cases:cases,cfg:cfg})[p]();
+}
+
+function sc(v){var c=v>=.9?'sp':v>=.8?'sw':'sf';return'<span class="sc '+c+'">'+v.toFixed(2)+'</span>';}
+function dc(v,col){var op=v>=.85?1:v>=.75?.7:.5;return'<span class="dc" style="color:'+col+';border-color:'+col+'40;background:'+col+'12;opacity:'+op+'">'+v.toFixed(2)+'</span>';}
+
+// DASHBOARD
+function dash(){
+  var el=document.getElementById('pg');
+  el.innerHTML='<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px"><div><div class="pt">Evaluation Dashboard</div><div class="ps">3 benchmark runs · 33 evaluations · last run May 15</div></div></div>'
+  +'<div class="g5" style="margin-bottom:16px">'
+  +kpi('Avg Faithfulness','0.89','↑ 0.04 vs prev','#ff4757')
+  +kpi('Avg Consistency','0.93','↑ 0.02 vs prev','#10b981')
+  +kpi('Pass Rate','90.9%','10/11 last run','#3b82f6')
+  +kpi('Hallucinations','2','PR-001, PR-005','#ff4757')
+  +kpi('Avg Latency','2ms','Mock backend','#a855f7')
+  +'</div>'
+  +'<div class="g2" style="margin-bottom:14px">'
+  +'<div class="card" style="padding:14px"><div style="font-size:11px;font-weight:700;color:#e8f2ff;margin-bottom:12px;display:flex;justify-content:space-between">Score Trend <span style="font-family:var(--mono);font-size:8px;color:var(--dim)">3 runs</span></div>'+trendSvg()+'</div>'
+  +'<div class="card" style="padding:14px"><div style="font-size:11px;font-weight:700;color:#e8f2ff;margin-bottom:10px">Dimension Breakdown</div>'+dimBreak()+'</div>'
+  +'</div>'
+  +'<div class="card"><div style="padding:12px 14px 10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;font-weight:700;color:#e8f2ff">Recent Runs</span><button class="btn bg bs" onclick="go(\'res\')">View All →</button></div>'
+  +'<table class="dt"><thead><tr><th>Run ID</th><th>Date</th><th>Backend</th><th>Cases</th><th>Passed</th><th>Avg Score</th><th>Faithfulness</th><th>Consistency</th><th></th></tr></thead><tbody>'
+  +RUNS.map(function(r){return'<tr><td><span style="font-family:var(--mono);font-size:9px;color:var(--faith)">'+r.id+'</span></td><td style="font-family:var(--mono);font-size:9px;color:var(--mid)">'+r.date+'</td><td><span style="font-family:var(--mono);font-size:8px;color:var(--mid);border:1px solid var(--border2);padding:2px 6px;border-radius:10px">'+r.back+'</span></td><td style="font-family:var(--mono)">'+r.cases+'</td><td style="font-family:var(--mono)">'+r.pass+'/'+r.cases+'</td><td>'+sc(r.sc)+'</td><td style="font-family:var(--mono);font-size:10px;color:#ff4757">'+r.fa+'</td><td style="font-family:var(--mono);font-size:10px;color:#10b981">'+r.co+'</td><td><button class="btn bg bs" onclick="go(\'res\')">View →</button></td></tr>';}).join('')
+  +'</tbody></table></div>';
+}
+
+function kpi(l,v,d,c){return'<div class="kpi" style="--c:'+c+'"><div class="kl">'+l+'</div><div class="kv" style="color:'+c+'">'+v+'</div><div class="kd">'+d+'</div></div>';}
+
+function trendSvg(){
+  var dims=[{l:'Faith',c:'#ff4757',v:[.85,.85,.89]},{l:'Con',c:'#10b981',v:[.91,.88,.93]},{l:'Rel',c:'#a855f7',v:[.82,.83,.87]},{l:'Prec',c:'#f59e0b',v:[.70,.72,.76]}];
+  var W=260,H=110,pL=30,pB=24,pT=8,pR=8;
+  var tx=function(l){return pL+l*((W-pL-pR)/2);};
+  var ty=function(q){return pT+(1-(q-.65)/.35)*(H-pT-pB);};
+  var grid=[.7,.8,.9].map(function(q){return'<line x1="'+pL+'" y1="'+ty(q)+'" x2="'+(W-pR)+'" y2="'+ty(q)+'" stroke="#141d2e" stroke-width="1"/><text x="'+(pL-4)+'" y="'+(ty(q)+3)+'" fill="#2a3d58" font-size="7" text-anchor="end" font-family="JetBrains Mono">'+q+'</text>';}).join('');
+  var lines=dims.map(function(d){
+    var pts=d.v.map(function(v,i){return tx(i)+','+ty(v);}).join(' ');
+    var dots=d.v.map(function(v,i){return'<circle cx="'+tx(i)+'" cy="'+ty(v)+'" r="2.5" fill="'+d.c+'"/>';}).join('');
+    return'<polyline points="'+pts+'" fill="none" stroke="'+d.c+'" stroke-width="1.5" opacity=".85"/>'+dots;
+  }).join('');
+  var leg=dims.map(function(d,i){return'<g transform="translate('+(i*65)+',0)"><line x1="0" y1="5" x2="10" y2="5" stroke="'+d.c+'" stroke-width="1.5"/><circle cx="5" cy="5" r="2" fill="'+d.c+'"/><text x="14" y="9" fill="#5a7090" font-size="7" font-family="JetBrains Mono">'+d.l+'</text></g>';}).join('');
+  return'<svg viewBox="0 0 '+W+' '+(H+16)+'" style="width:100%;overflow:visible">'+grid+lines+'<g transform="translate('+pL+','+(H+4)+')" >'+leg+'</g></svg>';
+}
+
+function dimBreak(){
+  return[['Faithfulness','#ff4757',.89],['Answer Relevance','#a855f7',.87],['Ctx Precision','#f59e0b',.76],['Consistency','#10b981',.93]].map(function(d){
+    return'<div class="sr"><div class="sdot" style="background:'+d[1]+'"></div><div class="sn">'+d[0]+'</div><div class="sb"><div class="sbf" style="width:'+(d[2]*100)+'%;background:'+d[1]+'"></div></div><div class="sv" style="color:'+d[1]+'">'+d[2]+'</div></div>';
+  }).join('');
+}
+
+// RUNNER
+function run(){
+  var el=document.getElementById('pg');
+  el.innerHTML='<div style="margin-bottom:16px"><div class="pt">Benchmark Runner</div><div class="ps">Configure and execute evaluation benchmarks</div></div>'
+  +'<div class="g2" style="align-items:start">'
+  +'<div>'
+  +'<div class="card" style="padding:14px;margin-bottom:12px">'
+  +'<div style="font-size:11px;font-weight:700;color:#e8f2ff;margin-bottom:12px">Configuration</div>'
+  +'<div class="fl">Judge Backend</div><div class="bt" style="margin-bottom:12px"><div class="bb on">● Mock</div><div class="bb">Ollama</div><div class="bb">API</div></div>'
+  +'<div class="fl">System Under Test</div><div class="bt" style="margin-bottom:12px"><div class="bb on">● Mock</div><div class="bb">Ollama</div><div class="bb">API</div></div>'
+  +'<div class="fl">Test Cases</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:12px">'
+  +['● All Cases','Payment Risk','Billing Dispute','Churn Prevention'].map(function(l,i){return'<div class="bb '+(i===0?'on':'')+'" style="font-size:9px">'+l+'</div>';}).join('')
+  +'</div>'
+  +'<div style="display:flex;gap:7px"><button class="btn bp" style="flex:1" onclick="startRun()">▶ Run Benchmark</button><button class="btn bg bs" onclick="go(\'arch\')">Watch Live →</button></div>'
+  +'</div>'
+  +'<div class="card" style="padding:14px"><div style="font-size:11px;font-weight:700;color:#e8f2ff;margin-bottom:10px">Last Run Summary</div>'
+  +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">'
+  +[['Cases','11'],['Passed','10'],['Failed','1'],['Avg Score','0.88'],['Faithfulness','0.89'],['Consistency','0.93']].map(function(x){return'<div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px 10px"><div class="fl">'+x[0]+'</div><div style="font-family:var(--mono);font-size:13px;font-weight:700;color:#e8f2ff;margin-top:2px">'+x[1]+'</div></div>';}).join('')
+  +'</div></div>'
+  +'</div>'
+  +'<div class="card" style="overflow:hidden">'
+  +'<div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;font-weight:700;color:#e8f2ff">Execution Log</span><span style="font-family:var(--mono);font-size:8px;color:var(--dim)" id="rst">idle</span></div>'
+  +'<div id="lb" style="padding:10px 14px;height:420px;overflow-y:auto"><div style="color:var(--dim);font-family:var(--mono);font-size:9px;text-align:center;padding:40px 0">Configure and click Run Benchmark.</div></div>'
+  +'</div></div>';
+}
+
+function startRun(){
+  if(rState==='running')return;
+  rState='running';rIdx=0;
+  document.getElementById('lb').innerHTML='';
+  document.getElementById('rst').textContent='running…';
+  addLog();
+}
+function addLog(){
+  if(rIdx>=LOGS.length){document.getElementById('rst').textContent='complete';rState='done';return;}
+  var e=LOGS[rIdx],b=document.getElementById('lb');
+  if(!b)return;
+  var d=document.createElement('div');d.className='le fi2';
+  d.innerHTML='<span class="lt">'+e.ts+'</span><span class="lta" style="color:'+e.tc+';border-color:'+e.tc+'50;background:'+e.tc+'18">'+e.tag+'</span><span class="lm">'+e.msg+'</span>';
+  b.appendChild(d);b.scrollTop=b.scrollHeight;rIdx++;
+  setTimeout(addLog,160+Math.random()*80);
+}
+
+// RESULTS
+function res(){
+  var el=document.getElementById('pg');
+  el.innerHTML='<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px"><div><div class="pt">Benchmark Results</div><div class="ps">run-001 · Mock LLM · May 15 10:42 · 11 cases</div></div><div style="display:flex;gap:7px"><button class="btn bg bs">⬇ JSON</button><button class="btn bg bs">⬇ HTML</button></div></div>'
+  +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px">'
+  +[['Pass Rate','90.9%','#10b981'],['Avg Overall','0.88','#3b82f6'],['Avg Faithfulness','0.89','#ff4757'],['Hallucinations','2','#ff4757']].map(function(x){
+    return'<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:11px 13px"><div class="fl">'+x[0]+'</div><div style="font-family:var(--mono);font-size:18px;font-weight:800;color:'+x[2]+';margin-top:3px">'+x[1]+'</div></div>';
+  }).join('')+'</div>'
+  +'<div class="card"><table class="dt" id="rtable"><thead><tr><th>Case</th><th>Description</th><th style="color:#ff4757">Faith</th><th style="color:#a855f7">Rel</th><th style="color:#f59e0b">Prec</th><th style="color:#10b981">Con</th><th>Lat</th><th>Score</th><th></th></tr></thead><tbody id="rtbody">'
+  +CASES.map(function(c){return caseRow(c);}).join('')
+  +'</tbody></table></div>';
+}
+function caseRow(c){
+  var exp=expCase===c.id;
+  return'<tr onclick="toggleC(\''+c.id+'\')" style="cursor:pointer">'
+  +'<td><span style="font-family:var(--mono);font-size:9px;color:var(--faith)">'+c.id+'</span></td>'
+  +'<td style="max-width:180px"><div style="font-size:10px;font-weight:600">'+c.cu+'</div><div style="font-family:var(--mono);font-size:8px;color:var(--dim)">'+c.de+'</div></td>'
+  +[['fa','#ff4757'],['re','#a855f7'],['pr','#f59e0b'],['co','#10b981']].map(function(x){return'<td>'+dc(c[x[0]],x[1])+'</td>';}).join('')
+  +'<td style="font-family:var(--mono);font-size:9px;color:var(--dim)">'+c.la+'ms</td>'
+  +'<td>'+sc(c.sc2)+'</td>'
+  +'<td style="font-size:9px;color:var(--dim)">'+(exp?'▲':'▼')+'</td>'
+  +'</tr>'
+  +(exp?'<tr><td colspan="9" style="padding:0"><div style="background:var(--surface);border-top:1px solid var(--border);padding:14px">'+caseDetail(c)+'</div></td></tr>':'');
+}
+function caseDetail(c){
+  var dims=[['Faithfulness','#ff4757',c.fa,.85,'All claims grounded in context.'],['Answer Rel.','#a855f7',c.re,.8,'High semantic similarity to question.'],['Ctx Precision','#f59e0b',c.pr,.7,'2/3 chunks directly referenced.'],['Consistency','#10b981',c.co,.9,'5 runs · pairwise similarity stable.']];
+  return'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px">'+dims.map(function(d){
+    var ok=d[2]>=d[3];
+    return'<div style="background:var(--card);border:1px solid '+(ok?d[1]+'40':'#ff475740')+';border-radius:7px;padding:11px;border-left:2px solid '+d[1]+'">'
+    +'<div style="font-family:var(--mono);font-size:8px;font-weight:700;color:'+d[1]+';margin-bottom:5px">'+d[0].toUpperCase()+'</div>'
+    +'<div style="font-size:20px;font-weight:800;color:'+(ok?d[1]:'#ff4757')+';margin-bottom:3px">'+d[2].toFixed(2)+'</div>'
+    +'<div style="font-family:var(--mono);font-size:8px;color:var(--dim);margin-bottom:5px">threshold: '+d[3]+'</div>'
+    +'<div style="font-size:9px;color:var(--mid);line-height:1.5">'+d[4]+'</div>'
+    +'</div>';
+  }).join('')+'</div>';
+}
+function toggleC(id){expCase=expCase===id?null:id;res();}
+
+// COMPARE
+function cmp(){
+  var el=document.getElementById('pg');
+  var ms=[
+    {name:'Mock LLM', c:'#5a7090',fa:.89,re:.87,pr:.76,co:.93,la:2,   sc:.88,p:10},
+    {name:'Ollama 3.2',c:'#3b82f6',fa:.85,re:.83,pr:.71,co:.88,la:3200,sc:.84,p:9},
+    {name:'Claude API',c:'#ff4757',fa:.94,re:.91,pr:.84,co:.96,la:6400,sc:.93,p:11},
+  ];
+  el.innerHTML='<div style="margin-bottom:16px"><div class="pt">Model Comparison</div><div class="ps">Quality and latency across LLM backends</div></div>'
+  +'<div class="g3" style="margin-bottom:14px">'+ms.map(function(m){
+    var ok=m.sc>=.9?'sp':m.sc>=.82?'sw':'sf';
+    return'<div style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:14px;border-top:2px solid '+m.c+'">'
+    +'<div style="font-size:12px;font-weight:800;color:#e8f2ff;margin-bottom:10px;display:flex;justify-content:space-between">'+m.name+' <span class="sc '+ok+'">'+m.sc.toFixed(2)+'</span></div>'
+    +[['Faith','#ff4757',m.fa],['Rel','#a855f7',m.re],['Prec','#f59e0b',m.pr],['Con','#10b981',m.co]].map(function(d){
+      return'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+      +'<span style="font-size:9px;color:var(--mid)">'+d[0]+'</span>'
+      +'<div style="display:flex;align-items:center;gap:7px"><div style="width:55px;height:3px;background:var(--border2);border-radius:2px;overflow:hidden"><div style="width:'+(d[2]*100)+'%;height:100%;background:'+d[1]+';border-radius:2px"></div></div>'
+      +'<span style="font-family:var(--mono);font-size:10px;font-weight:700;color:'+d[1]+';width:26px;text-align:right">'+d[2]+'</span></div>'
+      +'</div>';
+    }).join('')
+    +'<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-family:var(--mono);font-size:9px;color:var(--mid)">Pass: <span style="color:'+m.c+';font-weight:700">'+m.p+'/11</span> · Latency: <span style="color:'+m.c+';font-weight:700">'+(m.la<100?m.la+'ms':(m.la/1000).toFixed(1)+'s')+'</span></div>'
+    +'</div>';
+  }).join('')+'</div>'
+  +'<div class="g2">'
+  +'<div class="card" style="padding:14px"><div style="font-size:11px;font-weight:700;color:#e8f2ff;margin-bottom:12px">Quality vs Latency</div>'+scatter(ms)+'</div>'
+  +'<div class="card" style="padding:14px"><div style="font-size:11px;font-weight:700;color:#e8f2ff;margin-bottom:10px">Recommendation Engine</div>'
+  +[['< 100ms SLO','Mock LLM','#5a7090','Only Mock qualifies. Quality: 0.88.'],['< 5,000ms SLO','Ollama','#3b82f6','Real inference, no API cost.'],['< 10,000ms SLO','Claude API','#ff4757','Best quality (0.93). Production eval.'],['No SLO','Claude API','#ff4757','Highest faithfulness + consistency.']].map(function(x){
+    return'<div style="padding:9px 11px;border-radius:5px;border:1px solid var(--border);background:var(--surface);margin-bottom:7px;display:flex;justify-content:space-between;align-items:center"><span style="font-family:var(--mono);font-size:9px;color:var(--mid)">'+x[0]+'</span><span style="font-size:10px;font-weight:700;color:'+x[2]+'">'+x[1]+'</span></div>';
+  }).join('')
+  +'</div></div>';
+}
+function scatter(ms){
+  var W=240,H=150,pL=32,pB=22,pT=8,pR=8;
+  var ml=7000,minq=.80,maxq=1.0;
+  var tx=function(l){return pL+l/ml*(W-pL-pR);};
+  var ty=function(q){return pT+(1-(q-minq)/(maxq-minq))*(H-pT-pB);};
+  var g=[0,2000,4000,6000].map(function(l){return'<line x1="'+tx(l)+'" y1="'+pT+'" x2="'+tx(l)+'" y2="'+(H-pB)+'" stroke="#141d2e" stroke-width="1"/><text x="'+tx(l)+'" y="'+(H-pB+12)+'" fill="#2a3d58" font-size="7" text-anchor="middle" font-family="JetBrains Mono">'+(l<1000?l+'ms':(l/1000)+'s')+'</text>';}).join('');
+  var gy=[.85,.90,.95].map(function(q){return'<line x1="'+pL+'" y1="'+ty(q)+'" x2="'+(W-pR)+'" y2="'+ty(q)+'" stroke="#141d2e" stroke-width="1"/><text x="'+(pL-4)+'" y="'+(ty(q)+3)+'" fill="#2a3d58" font-size="7" text-anchor="end" font-family="JetBrains Mono">'+q+'</text>';}).join('');
+  var dots=ms.map(function(m){return'<circle cx="'+tx(m.la)+'" cy="'+ty(m.sc)+'" r="5" fill="'+m.c+'" opacity=".9"/><text x="'+tx(m.la)+'" y="'+(ty(m.sc)-9)+'" fill="'+m.c+'" font-size="7" text-anchor="middle" font-family="Syne" font-weight="700">'+m.name.split(' ')[0]+'</text>';}).join('');
+  return'<svg viewBox="0 0 '+W+' '+H+'" style="width:100%">'+g+gy+dots+'</svg>';
+}
+
+// ARCHITECTURE
+function arch(){
+  var el=document.getElementById('pg');
+  el.innerHTML='<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px"><div><div class="pt">Architecture View</div><div class="ps">Evaluation framework · 7 evaluators · judge separation</div></div><button class="btn bp bs" onclick="go(\'run\')">▶ Watch Live</button></div>'
+  +'<div class="ag">'
+  +'<div class="an">'+ARCH.map(function(c){
+    var on=archSel===c.id;
+    return'<div class="ani '+(on?'on':'')+'" style="--ic:'+c.color+'40;--ib:'+c.color+'10" onclick="selArch(\''+c.id+'\')">'
+    +'<div class="ann" style="background:'+c.color+'22;color:'+c.color+'">'+c.num+'</div>'
+    +'<div class="ane"><div class="annt" style="'+(on?'color:'+c.color:'')+'">'+c.name+'</div><div class="anns">'+c.sub+'</div></div>'
+    +'</div>';
+  }).join('')+'</div>'
+  +'<div class="ada">'+diagWrap()+'</div>'
+  +'<div class="adv">'+detailPanel()+'</div>'
+  +'</div>';
+}
+function diagWrap(){
+  return'<div style="display:flex;flex-direction:column;align-items:center;gap:0;width:300px">'
+  +dnode('tc','01','Test Cases','YAML · 11 cases','#5a7090')
+  +'<div class="dedge"><div class="del">test case input</div></div>'
+  +dnode('run2','02','Runner / SUT','Direct · Mock · Ollama · API','#3b82f6')
+  +'<div class="dedge"><div class="del">agent_output + latency_ms</div></div>'
+  +'<div style="width:100%;background:rgba(255,255,255,.012);border:1px solid var(--border);border-radius:7px;padding:9px;margin-bottom:0">'
+  +'<div style="font-family:var(--mono);font-size:7px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px">Composite Evaluator</div>'
+  +'<div class="eg">'
+  +['faith','rel','prec','con','lat','judge'].map(function(id){
+    var c=ARCH.find(function(x){return x.id===id;});
+    if(!c)return'';
+    var on=archSel===id;
+    return'<div class="emn" style="border-color:'+(on?c.color:c.color+'40')+';background:'+(on?c.color+'15':'transparent')+'" onclick="selArch(\''+id+'\')">'
+    +'<div class="emni" style="color:'+c.color+'">'+c.num+'</div>'
+    +'<div class="emnn">'+c.name+'</div>'
+    +'</div>';
+  }).join('')
+  +'</div></div>'
+  +'<div class="dedge"><div class="del">EvalResult</div></div>'
+  +dnode('eng','E','Benchmark Engine','Aggregate · SSE · Reports','#8b5cf6')
+  +'</div>';
+}
+function dnode(id,num,name,sub,color){
+  var on=archSel===id;
+  return'<div class="dn" style="border-color:'+(on?color:color+'40')+';background:'+(on?color+'15':'transparent')+';'+(on?'box-shadow:0 0 14px '+color+'28':'')+'" onclick="selArch(\''+id+'\')">'
+  +'<div class="dnh"><span class="dnid" style="color:'+color+'">'+num+'</span>'+(on?'<div style="width:5px;height:5px;border-radius:50%;background:'+color+';box-shadow:0 0 5px '+color+'"></div>':'')+'</div>'
+  +'<div class="dnname">'+name+'</div><div class="dnsub">'+sub+'</div>'
+  +'</div>';
+}
+function detailPanel(){
+  var c=ARCH.find(function(x){return x.id===archSel;});
+  var d=DETAIL[archSel];
+  if(!c||!d)return'';
+  var tabs=['prob','how','dec','last'];
+  var tlabs=['Problem','How It Works','Decisions','Last Run'];
+  return'<div class="dc2">'
+  +'<div class="dh" style="border-left:3px solid '+c.color+'">'
+  +'<div class="dhn" style="color:'+c.color+'">'+c.num+' — '+c.id.toUpperCase()+'</div>'
+  +'<div class="dhname">'+c.name+'</div>'
+  +'<div class="dhs">'+c.sub+'</div>'
+  +'</div>'
+  +'<div class="dtab">'+tabs.map(function(t,i){
+    var on=archTab===t;
+    return'<div class="dtt '+(on?'on':'')+'" style="'+(on?'color:'+c.color+';border-bottom-color:'+c.color:'')+'" onclick="setTab(\''+t+'\')">'+tlabs[i]+'</div>';
+  }).join('')+'</div>'
+  +'<div class="db">'+tabContent(d,c)+'</div>'
+  +'</div>';
+}
+function tabContent(d,c){
+  if(archTab==='prob')return'<p style="font-size:10px;line-height:1.8;color:var(--mid)">'+d.prob+'</p>';
+  if(archTab==='how')return d.how.map(function(s,i){
+    return'<div style="display:flex;gap:7px;margin-bottom:9px"><span style="font-family:var(--mono);font-size:8px;font-weight:700;color:'+c.color+';background:'+c.color+'15;border:1px solid '+c.color+'40;border-radius:3px;padding:2px 5px;flex-shrink:0;height:fit-content">'+String(i+1).padStart(2,'0')+'</span><span style="font-size:10px;color:var(--mid);line-height:1.6">'+s+'</span></div>';
+  }).join('');
+  if(archTab==='dec')return'<table style="width:100%;border-collapse:collapse">'
+    +'<tr>'+['Decision','Choice','Rationale'].map(function(h){return'<th style="font-family:var(--mono);font-size:7px;color:var(--dim);padding:5px 7px;border-bottom:1px solid var(--border);text-align:left;letter-spacing:.1em;text-transform:uppercase">'+h+'</th>';}).join('')+'</tr>'
+    +d.dec.map(function(r){return'<tr><td style="font-size:9px;font-weight:700;color:#e8f2ff;padding:7px;border-bottom:1px solid var(--border)">'+r[0]+'</td><td style="font-family:var(--mono);font-size:8px;color:'+c.color+';padding:7px;border-bottom:1px solid var(--border)">'+r[1]+'</td><td style="font-size:9px;color:var(--mid);padding:7px;border-bottom:1px solid var(--border)">'+r[2]+'</td></tr>';}).join('')+'</table>';
+  if(archTab==='last')return d.scores.map(function(s){
+    return'<div class="sr"><div class="sdot" style="background:'+c.color+'"></div><div class="sn" style="font-family:var(--mono);font-size:9px">'+s.dim+'</div><div class="sb"><div class="sbf" style="width:'+(s.v*100)+'%;background:'+c.color+'"></div></div><div class="sv" style="color:'+(s.ok?c.color:'#ff4757')+'">'+s.v.toFixed(2)+'</div><span style="font-size:9px;margin-left:3px">'+(s.ok?'✓':'✗')+'</span></div>';
+  }).join('');
+  return'';
+}
+function selArch(id){archSel=id;archTab='prob';arch();}
+function setTab(t){archTab=t;arch();}
+
+// CASES
+function cases(){
+  var el=document.getElementById('pg');
+  el.innerHTML='<div style="margin-bottom:16px"><div class="pt">Test Cases</div><div class="ps">11 YAML-defined cases · 3 scenarios · 3 customers</div></div>'
+  +'<div class="g2" style="align-items:start">'
+  +'<div class="card" style="overflow:hidden"><table class="dt"><thead><tr><th>ID</th><th>Scenario</th><th>Customer</th><th style="color:#ff4757">F</th><th style="color:#10b981">C</th></tr></thead><tbody>'
+  +CASES.map(function(c){return'<tr style="cursor:pointer"><td><span style="font-family:var(--mono);font-size:9px;color:var(--faith)">'+c.id+'</span></td><td style="font-size:10px">'+c.sc+'</td><td style="font-family:var(--mono);font-size:8px;color:var(--mid)">'+c.cu.split(' ')[0]+' '+c.cu.split(' ')[1]+'</td><td>'+dc(c.fa,'#ff4757')+'</td><td>'+dc(c.co,'#10b981')+'</td></tr>';}).join('')+'</tbody></table></div>'
+  +'<div class="card" style="padding:14px">'
+  +'<div style="font-size:12px;font-weight:800;color:var(--faith);font-family:var(--mono);margin-bottom:3px">PR-001</div>'
+  +'<div style="font-size:13px;font-weight:700;color:#e8f2ff;margin-bottom:11px">Marcus Webb · High Risk · CRM Degraded</div>'
+  +[['Scenario','payment_risk_intervention'],['Customer','C002 · Standard · risk_score: 0.71'],['CRM','DEGRADED — timeout 150ms'],['Policy','KB-HARD-001 · KB-PAY-007 · KB-COMP-003']].map(function(x){
+    return'<div style="display:flex;gap:10px;margin-bottom:9px;padding-bottom:9px;border-bottom:1px solid var(--border)"><div style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);width:80px;flex-shrink:0;padding-top:1px">'+x[0]+'</div><div style="font-size:10px;color:var(--mid)">'+x[1]+'</div></div>';
+  }).join('')
+  +'<div class="fl" style="margin-bottom:6px">Hallucination Guards</div>'
+  +'<div style="display:flex;flex-wrap:wrap;gap:5px">'
+  +['premium_tier','long_tenure','loyalty_discount','NPS','tenure_months'].map(function(g){return'<span style="font-family:var(--mono);font-size:8px;color:#ff4757;background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.25);padding:2px 7px;border-radius:3px">✗ '+g+'</span>';}).join('')
+  +'</div><div style="margin-top:12px"><button class="btn bp bs" onclick="go(\'run\')">▶ Run This Case</button></div>'
+  +'</div></div>';
+}
+
+// SETTINGS
+function cfg(){
+  var el=document.getElementById('pg');
+  el.innerHTML='<div style="margin-bottom:16px"><div class="pt">Settings</div><div class="ps">Runtime configuration · changes apply immediately · no restart required</div></div>'
+  +settSection('Judge LLM','Evaluates agent outputs. Should differ from SUT to avoid self-evaluation bias.',judgeBody())
+  +settSection('System Under Test (SUT)','The LLM being evaluated. Can differ from judge.',sutBody())
+  +settSection('Evaluation Thresholds','Pass/fail thresholds per dimension — applied on next benchmark run.',threshBody())
+  +settSection('Banking Platform Integration','Connect to banking-agentic-ai-platform for real multi-layer evaluation.',platBody())
+  +cfgDisplay();
+}
+function settSection(title,sub,body){
+  return'<div class="ss"><div class="sh"><div><div class="sht">'+title+'</div><div class="shs">'+sub+'</div></div></div><div class="sb2">'+body+'</div></div>';
+}
+function judgeBody(){
+  return'<div class="fl">Backend</div><div class="bt" style="margin-bottom:10px">'
+  +['mock','ollama','api'].map(function(b){return'<div class="bb '+(st.judge===b?'on':'')+'" onclick="setJ(\''+b+'\')">'+{mock:'● Mock',ollama:'Ollama',api:'API'}[b]+'</div>';}).join('')
+  +'</div>'+bkdExtra('judge');
+}
+function sutBody(){
+  return'<div class="fl">Backend</div><div class="bt" style="margin-bottom:10px">'
+  +['mock','ollama','api'].map(function(b){return'<div class="bb '+(st.sut===b?'on':'')+'" onclick="setSU(\''+b+'\')">'+{mock:'● Mock',ollama:'Ollama',api:'API'}[b]+'</div>';}).join('')
+  +'</div>'+bkdExtra('sut');
+}
+function bkdExtra(t){
+  var bk=t==='judge'?st.judge:st.sut;
+  if(bk==='mock')return'<div style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:5px;padding:8px 11px;font-family:var(--mono);font-size:9px;color:#10b981">● Mock active — deterministic scores, no API key, runs instantly</div>';
+  if(bk==='ollama')return'<div style="margin-top:10px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px"><div><div class="fl">Base URL</div><input class="fi" value="http://localhost:11434" style="font-size:9px"></div><div><div class="fl">Model</div><select class="fi" style="font-size:9px"><option>llama3.2</option><option>mistral</option><option>phi3.5</option></select></div></div><button class="btn bg bs" onclick="testOla()">Test Connection</button><div class="cs"><div class="cd '+(st.ola==='ok'?'ok':st.ola==='er'?'er':'id')+'"></div><span style="color:var(--mid)">'+(st.ola==='ok'?'✓ Ollama reachable · llama3.2 available':st.ola==='er'?'✗ Not reachable · run: docker-compose up -d ollama':'Click Test Connection')+'</span></div>'+(st.ola==='er'?'<div style="margin-top:8px;background:rgba(255,71,87,.05);border:1px solid rgba(255,71,87,.2);border-radius:5px;padding:8px 11px;font-family:var(--mono);font-size:8px;color:var(--mid)">docker-compose up -d ollama<br>docker exec -it agentic-eval-ollama ollama pull llama3.2</div>':'')+'</div>';
+  return'<div style="margin-top:10px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px"><div><div class="fl">OpenAI Model</div><select class="fi" style="font-size:9px"><option>gpt-4o</option><option>gpt-4o-mini</option><option>gpt-4.1</option></select></div><div><div class="fl">OpenAI API Key</div><select class="fi" style="font-size:9px"><option>Configured server key</option><option>Temporary test key</option></select></div></div><div style="font-family:var(--mono);font-size:8px;color:var(--dim);margin-bottom:8px">Sent to server once · never stored in browser · never echoed back</div><button class="btn bg bs" onclick="testApi()">Test Connection</button><div class="cs"><div class="cd '+(st.api==='ok'?'ok':st.api==='er'?'er':'id')+'"></div><span style="color:var(--mid)">'+(st.api==='ok'?'✓ OpenAI API key configured · gpt-4o selected':st.api==='er'?'✗ Invalid API key':'Choose key and test')+'</span></div></div>';
+}
+function threshBody(){
+  return[['Faithfulness','#ff4757',.85],['Answer Relevance','#a855f7',.80],['Ctx Precision','#f59e0b',.70],['Consistency','#10b981',.90]].map(function(d){
+    return'<div class="slrow"><div class="slh"><span class="sln" style="color:'+d[1]+'">'+d[0]+'</span><span class="slv" style="color:'+d[1]+'">'+d[2].toFixed(2)+'</span></div><div class="sltr"><div class="slf" style="width:'+(d[2]*100)+'%;background:'+d[1]+'"></div></div></div>';
+  }).join('')
+  +'<div class="slrow"><div class="slh"><span class="sln">Consistency Runs</span><span class="slv">5</span></div>'
+  +'<div style="display:flex;gap:5px">'
+  +[1,3,5,7,10].map(function(n){return'<div class="bb '+(n===5?'on':'')+'" style="flex:none;padding:4px 10px;font-family:var(--mono);font-size:10px">'+n+'</div>';}).join('')+'</div></div>';
+}
+function platBody(){
+  return'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+  +'<span style="font-size:10px;color:var(--mid)">Enable Platform Runner</span>'
+  +'<div onclick="togglePlat()" style="width:34px;height:18px;border-radius:9px;background:'+(st.plat?'var(--pass)':'var(--border2)')+';position:relative;cursor:pointer;transition:all .2s"><div style="position:absolute;top:2px;left:'+(st.plat?'16px':'2px')+';width:14px;height:14px;border-radius:7px;background:white;transition:all .2s"></div></div>'
+  +'</div>'
+  +'<div><div class="fl">Platform URL</div><div style="display:flex;gap:7px;align-items:center"><input class="fi" value="http://localhost:8000" style="font-size:9px;'+(st.plat?'':'opacity:.4')+'" '+(st.plat?'':'disabled')+'><button class="btn bg bs" '+(st.plat?'':'disabled style="opacity:.4"')+' onclick="testPlat()">Test</button></div></div>'
+  +'<div class="cs"><div class="cd '+(st.plat?'er':'id')+'"></div><span style="color:var(--mid)">'+(st.plat?'✗ Not reachable · cd ../banking-agentic-ai-platform && make dev':'Disabled — DirectRunner active · no external dependency')+'</span></div>';
+}
+function cfgDisplay(){
+  return'<div class="card" style="padding:14px"><div style="font-size:11px;font-weight:700;color:#e8f2ff;margin-bottom:10px">Current Configuration</div>'
+  +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">'
+  +[['Judge',st.judge,st.judge==='mock'?'#5a7090':'#ff4757'],['SUT',st.sut,st.sut==='mock'?'#5a7090':'#3b82f6'],['Platform',st.plat?'enabled':'disabled',st.plat?'#10b981':'#5a7090'],['Faithfulness','0.85','#ff4757'],['Consistency','0.90','#10b981'],['Con. Runs','5','#a855f7']].map(function(x){
+    return'<div style="background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:7px 9px"><div class="fl">'+x[0]+'</div><div style="font-family:var(--mono);font-size:11px;font-weight:700;color:'+x[2]+';margin-top:2px">'+x[1]+'</div></div>';
+  }).join('')+'</div></div>';
+}
+function setJ(b){st.judge=b;cfg();document.getElementById('js').textContent='Judge: '+b.charAt(0).toUpperCase()+b.slice(1);}
+function setSU(b){st.sut=b;cfg();document.getElementById('ss2').textContent='SUT: '+b.charAt(0).toUpperCase()+b.slice(1);}
+function togglePlat(){st.plat=!st.plat;cfg();}
+function testOla(){st.ola='id';cfg();setTimeout(function(){st.ola='er';cfg();},700);}
+function testApi(){st.api='id';cfg();setTimeout(function(){st.api='ok';cfg();},1100);}
+function testPlat(){}
+
+go('dash');
+</script>
+</body>
+</html>

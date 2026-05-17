@@ -1,0 +1,46 @@
+case_id: PR-004
+scenario: payment_risk_intervention
+customer_id: C003
+description: "Medium-risk customer with partial source degradation"
+input:
+  customer_profile:
+    card_utilization: 0.62
+    missed_pmts_90d: 1
+    checking_balance: 740.10
+    overdraft_count_30d: 1
+    risk_score: 0.48
+    crm_available: false
+    sources_degraded: ["crm", "support_history"]
+  retrieved_policy_chunks:
+    - document_id: KB-PAY-004
+      version: "1.5"
+      content: >
+        One missed payment with utilization between 50% and 70%
+        indicates medium payment risk when balance remains above $500.
+    - document_id: KB-HARD-002
+      version: "2.1"
+      content: >
+        Hardship enrollment requires either 2 or more missed payments
+        or a checking balance below $500 plus documented hardship.
+  scenario_context: >
+    Assess payment risk with CRM and support history unavailable.
+    Recommend an action using only current financial and policy context.
+expected:
+  risk_level: MEDIUM
+  should_reference_policy: true
+  key_signals:
+    - missed_payment
+    - utilization
+    - checking_balance
+  should_not_claim:
+    - support_ticket_history
+    - premium_tier
+    - documented_hardship
+  expected_action_type: PAYMENT_PLAN_REVIEW
+evaluation_criteria:
+  faithfulness_threshold: 0.85
+  answer_relevance_threshold: 0.80
+  context_precision_threshold: 0.70
+  consistency_threshold: 0.90
+  consistency_runs: 5
+  max_latency_ms: 10000

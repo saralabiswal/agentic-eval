@@ -1,0 +1,59 @@
+case_id: PR-001
+scenario: payment_risk_intervention
+customer_id: C002
+description: "High-risk customer with CRM unavailable at assembly time"
+input:
+  customer_profile:
+    card_utilization: 0.76
+    missed_pmts_90d: 2
+    checking_balance: 312.40
+    overdraft_count_30d: 3
+    risk_score: 0.71
+    crm_available: false
+    sources_degraded: ["crm"]
+  retrieved_policy_chunks:
+    - document_id: KB-HARD-001
+      version: "2.3"
+      content: >
+        Customers with 2 or more missed payments in a 90-day window
+        and checking balance below $500 are eligible for hardship
+        program enrollment. Eligibility review must include card
+        utilization and recent NSF event history.
+    - document_id: KB-PAY-007
+      version: "1.8"
+      content: >
+        Card utilization above 70% combined with 2 or more missed
+        payments in the prior 90 days indicates critical payment risk.
+        Automated escalation to intervention workflow is recommended.
+    - document_id: KB-COMP-003
+      version: "3.1"
+      content: >
+        Contact frequency limits apply per CFPB guidance. Maximum
+        2 outbound contacts per 7-day window. Prior contact history
+        must be verified before initiating new outreach.
+  scenario_context: >
+    Assess payment risk for a customer where CRM data is unavailable.
+    Determine risk level and recommend intervention based only on card,
+    banking, and model signals.
+expected:
+  risk_level: CRITICAL
+  should_reference_policy: true
+  key_signals:
+    - missed_payments
+    - card_utilization
+    - checking_balance
+    - overdraft
+  should_not_claim:
+    - premium_tier
+    - long_tenure
+    - loyalty_discount
+    - NPS
+    - tenure_months
+  expected_action_type: HARDSHIP_PROGRAM_ENROLLMENT
+evaluation_criteria:
+  faithfulness_threshold: 0.85
+  answer_relevance_threshold: 0.80
+  context_precision_threshold: 0.70
+  consistency_threshold: 0.90
+  consistency_runs: 5
+  max_latency_ms: 10000

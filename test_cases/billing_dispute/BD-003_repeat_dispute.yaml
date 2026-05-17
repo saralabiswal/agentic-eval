@@ -1,0 +1,46 @@
+case_id: BD-003
+scenario: billing_dispute_resolution
+customer_id: C002
+description: "Repeat dispute for same merchant within 30 days"
+input:
+  customer_profile:
+    dispute_amount: 62.50
+    days_since_transaction: 9
+    repeat_disputes_30d: 2
+    same_merchant_repeat: true
+    merchant_category: digital_goods
+    risk_score: 0.44
+    crm_available: true
+    sources_degraded: []
+  retrieved_policy_chunks:
+    - document_id: KB-DISP-006
+      version: "2.2"
+      content: >
+        Two or more disputes for the same merchant within 30 days must
+        be routed to specialist review before credit is issued.
+    - document_id: KB-DISP-003
+      version: "2.7"
+      content: >
+        Disputes below $100 with no repeat dispute pattern may be
+        provisionally credited while investigation proceeds.
+  scenario_context: >
+    Assess a repeat billing dispute and determine whether specialist
+    review is required before any credit action.
+expected:
+  risk_level: MEDIUM
+  should_reference_policy: true
+  key_signals:
+    - repeat_dispute
+    - same_merchant
+    - within_30_days
+  should_not_claim:
+    - no_repeat_dispute
+    - provisional_credit_approved
+  expected_action_type: SPECIALIST_DISPUTE_REVIEW
+evaluation_criteria:
+  faithfulness_threshold: 0.85
+  answer_relevance_threshold: 0.80
+  context_precision_threshold: 0.70
+  consistency_threshold: 0.90
+  consistency_runs: 5
+  max_latency_ms: 10000

@@ -1,0 +1,55 @@
+case_id: PR-002
+scenario: payment_risk_intervention
+customer_id: C002
+description: "High-risk customer with full CRM context available"
+input:
+  customer_profile:
+    card_utilization: 0.76
+    missed_pmts_90d: 2
+    checking_balance: 312.40
+    overdraft_count_30d: 3
+    risk_score: 0.71
+    crm_available: true
+    tenure_months: 38
+    customer_tier: standard
+    nps_score: 41
+    sources_degraded: []
+  retrieved_policy_chunks:
+    - document_id: KB-HARD-001
+      version: "2.3"
+      content: >
+        Customers with 2 or more missed payments in a 90-day window
+        and checking balance below $500 are eligible for hardship
+        program enrollment.
+    - document_id: KB-PAY-007
+      version: "1.8"
+      content: >
+        Card utilization above 70% combined with 2 or more missed
+        payments in the prior 90 days indicates critical payment risk.
+    - document_id: KB-CRM-002
+      version: "1.4"
+      content: >
+        CRM tenure and satisfaction signals may be included when CRM
+        is available, but they do not override payment risk policy.
+  scenario_context: >
+    Assess payment risk and recommend an intervention for a customer
+    with complete banking, card, model, and CRM context.
+expected:
+  risk_level: CRITICAL
+  should_reference_policy: true
+  key_signals:
+    - missed_payments
+    - card_utilization
+    - checking_balance
+    - crm_available
+  should_not_claim:
+    - premium_tier
+    - loyalty_discount
+  expected_action_type: HARDSHIP_PROGRAM_ENROLLMENT
+evaluation_criteria:
+  faithfulness_threshold: 0.85
+  answer_relevance_threshold: 0.80
+  context_precision_threshold: 0.70
+  consistency_threshold: 0.90
+  consistency_runs: 5
+  max_latency_ms: 10000
