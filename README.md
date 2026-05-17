@@ -217,6 +217,10 @@ Open:
 http://localhost:5173
 ```
 
+The app opens on the About page so business users see the problem and solution
+first. The Evaluate navigation then follows the workflow: run a benchmark,
+review results, compare models, and monitor the dashboard.
+
 The API listens on port `8001` so it can run beside the banking platform on
 port `8000`.
 

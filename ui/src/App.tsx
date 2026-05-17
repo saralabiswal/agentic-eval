@@ -25,20 +25,20 @@ import { modelDisplayName } from "./utils/modelLabels";
 
 const navGroups = [
   {
-    label: "Evaluate",
+    label: "Understand",
     items: [
-      { to: "/", label: "Dashboard", icon: Gauge, end: true },
-      { to: "/benchmark", label: "Benchmark Runner", icon: Play },
-      { to: "/results/latest", label: "Results", icon: FileText },
-      { to: "/compare", label: "Model Comparison", icon: GitCompare }
+      { to: "/", label: "About", icon: Info, end: true },
+      { to: "/architecture", label: "Architecture", icon: Boxes },
+      { to: "/cases", label: "Test Cases", icon: BarChart3 }
     ]
   },
   {
-    label: "Understand",
+    label: "Evaluate",
     items: [
-      { to: "/about", label: "About", icon: Info },
-      { to: "/architecture", label: "Architecture", icon: Boxes },
-      { to: "/cases", label: "Test Cases", icon: BarChart3 }
+      { to: "/benchmark", label: "1. Run Benchmark", icon: Play },
+      { to: "/results/latest", label: "2. Review Results", icon: FileText },
+      { to: "/compare", label: "3. Compare Models", icon: GitCompare },
+      { to: "/dashboard", label: "4. Monitor Dashboard", icon: Gauge }
     ]
   },
   {
@@ -97,11 +97,12 @@ export default function App(): JSX.Element {
         </header>
         <main className="page">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<About />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/benchmark" element={<BenchmarkRunner />} />
             <Route path="/results/:runId" element={<ResultDetail />} />
             <Route path="/compare" element={<ModelComparison />} />
-            <Route path="/about" element={<About />} />
             <Route path="/architecture" element={<Architecture />} />
             <Route path="/cases" element={<TestCases />} />
             <Route path="/settings" element={<SettingsPage />} />
