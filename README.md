@@ -181,9 +181,13 @@ Set:
 EVAL_JUDGE_BACKEND=api
 EVAL_JUDGE_MODEL=gpt-4o
 SUT_BACKEND=api
-SUT_MODEL=gpt-4o
+SUT_MODEL=gpt-4o-mini
 OPENAI_API_KEY=your-key
 ```
+
+Use a different Judge model and SUT model for evaluation. The Judge is assessing
+the SUT output, so the normal API setup should not point both roles at the same
+model.
 
 Then run:
 
