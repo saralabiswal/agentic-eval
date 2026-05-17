@@ -61,6 +61,7 @@ export default function App(): JSX.Element {
             <div className="logo-name">agentic-eval</div>
           </div>
           <div className="logo-sub">Model Evaluation Framework</div>
+          <div className="logo-author">Author: Sarala Biswal</div>
         </div>
         <nav className="nav">
           {navGroups.map((group) => (

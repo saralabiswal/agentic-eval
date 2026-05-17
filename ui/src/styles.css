@@ -106,10 +106,18 @@ a {
 
 .logo-sub {
   color: var(--mid);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+.logo-author {
+  color: var(--dim);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0;
+  margin-top: 2px;
 }
 
 .nav {
@@ -127,9 +135,8 @@ a {
   font-family: var(--sans);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.03em;
+  letter-spacing: 0;
   padding: 0 8px 5px;
-  text-transform: uppercase;
 }
 
 .nav-item {
@@ -196,9 +203,8 @@ a {
   font-family: var(--mono);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.03em;
+  letter-spacing: 0;
   padding: 4px 10px;
-  text-transform: uppercase;
 }
 
 .page {
@@ -349,9 +355,8 @@ a {
   font-family: var(--sans);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.03em;
+  letter-spacing: 0;
   margin-bottom: 7px;
-  text-transform: uppercase;
 }
 
 .kpi-value {
@@ -380,10 +385,9 @@ a {
   font-family: var(--sans);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.03em;
+  letter-spacing: 0;
   padding: 10px 14px;
   text-align: left;
-  text-transform: uppercase;
 }
 
 .data-table td {
@@ -597,9 +601,8 @@ a {
   font-family: var(--sans);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.03em;
+  letter-spacing: 0;
   margin-bottom: 5px;
-  text-transform: uppercase;
 }
 
 .field {
@@ -847,10 +850,9 @@ a {
   color: var(--mid);
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.03em;
+  letter-spacing: 0;
   min-height: 58px;
   padding: 9px 10px;
-  text-transform: uppercase;
 }
 
 .about-hero-metrics span {
@@ -992,9 +994,8 @@ a {
   display: block;
   font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   margin-bottom: 6px;
-  text-transform: uppercase;
 }
 
 .developer-runtime strong {
@@ -1648,6 +1649,7 @@ a {
 
   .logo-name,
   .logo-sub,
+  .logo-author,
   .nav-label,
   .nav-item span:last-child {
     display: none;

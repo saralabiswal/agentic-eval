@@ -164,15 +164,15 @@ export function About(): JSX.Element {
           <div className="about-hero-metrics">
             <div>
               <span>5</span>
-              dimensions
+              Dimensions
             </div>
             <div>
               <span>11</span>
-              cases
+              Cases
             </div>
             <div>
               <span>3</span>
-              backends
+              Backends
             </div>
           </div>
         </div>
